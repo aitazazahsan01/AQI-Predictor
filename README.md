@@ -12,7 +12,7 @@ Forecasting Islamabad's Air Quality Index (AQI) for the next 3 days, using a 100
 | Module | Status |
 |---|---|
 | Repo + docs | ✅ Done |
-| M1 — Hourly raw data ingestion | ⬜ Not started |
+| M1 — Hourly raw data ingestion | ✅ Working — verified end-to-end against the live Hopsworks project (`aqi_hourly_raw` feature group) |
 | M2 — Daily feature engineering | ⬜ Not started |
 | M3 — Historical backfill | ⬜ Not started |
 | M4 — Training pipeline (multi-model) | ⬜ Not started |
@@ -30,7 +30,18 @@ Python · Open-Meteo & AQICN APIs · Hopsworks (Feature Store + Model Registry) 
 
 ## Setup
 
-Setup instructions (environment variables, Hopsworks/AQICN account requirements, how to run each pipeline locally) will be added here as those pieces are built.
+**Note (Windows users):** the `hopsworks` package depends on `pyjks`/`twofish`, which needs a C compiler to build and has no prebuilt wheel for Windows. Either install the [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/), or do what this project's development so far has used: run everything inside **WSL** (`wsl --install`, then any Ubuntu distro), where `pip install -r requirements.txt` works out of the box.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # WSL/Linux/macOS
+pip install -r requirements.txt
+
+cp .env.example .env   # then fill in AQICN_TOKEN, HOPSWORKS_API_KEY, HOPSWORKS_PROJECT_NAME
+
+python scripts/run_feature_pipeline.py   # Module 1: fetch + store one hourly row
+python -m pytest tests/                  # run unit tests
+```
 
 ## License
 
