@@ -13,7 +13,7 @@ Forecasting Islamabad's Air Quality Index (AQI) for the next 3 days, using a 100
 |---|---|
 | Repo + docs | ✅ Done |
 | M1 — Hourly raw data ingestion | ✅ Working — verified end-to-end against the live Hopsworks project (`aqi_hourly_raw` feature group) |
-| M2 — Daily feature engineering | ⬜ Not started |
+| M2 — Daily feature engineering | ✅ Working — `aqi_daily_features` feature group, verified on 10 days of real data (26 unit tests) |
 | M3 — Historical backfill | ⬜ Not started |
 | M4 — Training pipeline (multi-model) | ⬜ Not started |
 | M5 — CI/CD automation (GitHub Actions) | ⬜ Not started |
@@ -39,9 +39,17 @@ pip install -r requirements.txt
 
 cp .env.example .env   # then fill in AQICN_TOKEN, HOPSWORKS_API_KEY, HOPSWORKS_PROJECT_NAME
 
-python scripts/run_feature_pipeline.py   # Module 1: fetch + store one hourly row
-python -m pytest tests/                  # run unit tests
+python scripts/run_feature_pipeline.py    # Module 1: fetch + store one hourly row
+python scripts/run_daily_aggregation.py   # Module 2: aggregate hourly -> daily features
+python -m pytest tests/                   # run unit tests
 ```
+
+### Pipelines
+
+| Script | Runs | What it does |
+|---|---|---|
+| `scripts/run_feature_pipeline.py` | hourly | Fetches current air quality + weather, writes one row to `aqi_hourly_raw`. |
+| `scripts/run_daily_aggregation.py` | daily | Aggregates hourly rows into one engineered row per day in `aqi_daily_features` (lags, rolling stats, AQI change rate, calendar features). Accepts `--date YYYY-MM-DD` or `--all`. |
 
 ## License
 
