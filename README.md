@@ -5,6 +5,12 @@ Forecasting Islamabad's Air Quality Index (AQI) for the next 3 days, using a 100
 - **New here?** Read [Project_Explanation.md](Project_Explanation.md) for a plain-language walkthrough of what this is and why.
 - **Building this?** Read [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full technical spec — module breakdown, data schemas, and API contracts.
 
+## Architecture
+
+![Pearls AQI Predictor — high level system architecture](high-level-diagram.png)
+
+Data flows left to right: GitHub Actions triggers hourly ingestion from the Open-Meteo and AQICN APIs → daily feature engineering (aggregates, lags, rolling stats, calendar flags) → the Hopsworks Feature Store → daily retraining across several model families → the best model per forecast day lands in the Model Registry → a Streamlit dashboard serves forecasts, trends, SHAP explanations and hazardous-AQI alerts.
+
 ## Status
 
 🚧 **In progress.** This section is updated as each module lands.
