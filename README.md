@@ -20,7 +20,7 @@ Data flows left to right: GitHub Actions triggers hourly ingestion from the Open
 | Repo + docs | ✅ Done |
 | M1 — Hourly raw data ingestion | ✅ Working — verified end-to-end against the live Hopsworks project (`aqi_hourly_raw` feature group) |
 | M2 — Daily feature engineering | ✅ Working — `aqi_daily_features` feature group, verified on 10 days of real data (26 unit tests) |
-| M3 — Historical backfill | ⬜ Not started |
+| M3 — Historical backfill | ✅ Code complete — fetches 1,454 clean daily rows (2022-08-05 →), 43 unit tests. Run via the **Historical Backfill** workflow. |
 | M4 — Training pipeline (multi-model) | ⬜ Not started |
 | M5 — CI/CD automation (GitHub Actions) | ⬜ Not started |
 | M6 — Streamlit dashboard | ⬜ Not started |
@@ -56,6 +56,9 @@ python -m pytest tests/                   # run unit tests
 |---|---|---|
 | `scripts/run_feature_pipeline.py` | hourly | Fetches current air quality + weather, writes one row to `aqi_hourly_raw`. |
 | `scripts/run_daily_aggregation.py` | daily | Aggregates hourly rows into one engineered row per day in `aqi_daily_features` (lags, rolling stats, AQI change rate, calendar features). Accepts `--date YYYY-MM-DD` or `--all`. |
+| `scripts/backfill_historical.py` | once, manually | Loads ~4 years of history (from 2022-08-05, the earliest Open-Meteo air-quality data) into both feature groups. Accepts `--start-date`, `--end-date`, `--dry-run`. |
+
+> **Network note:** writing to the Hopsworks *offline* store needs outbound access to HopsFS (`:8020`) and Kafka (`:9092`). Many campus and corporate networks allow only `:443`, in which case reads and metadata operations work but writes fail with `HdfsObjectStore error` or `Broker transport failure`. If you hit that, run the pipelines from GitHub Actions (see `.github/workflows/`) instead of locally — runners have unrestricted egress.
 
 ## License
 
