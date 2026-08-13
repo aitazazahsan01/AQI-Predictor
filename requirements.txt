@@ -1,5 +1,15 @@
+# Core pipeline
 requests
 python-dotenv
 pandas
 hopsworks[python]
+
+# Modelling (Module 4)
+scikit-learn
+xgboost
+statsmodels
+tensorflow-cpu>=2.15
+joblib
+
+# Testing
 pytest
