@@ -1,0 +1,7 @@
+# Shell scripts must keep LF endings or they break when run from WSL/Linux
+# after a Windows checkout ("/usr/bin/env: 'bash\r': No such file or directory").
+*.sh text eol=lf
+
+# Same reasoning for anything else executed by a Linux runner.
+*.yml text eol=lf
+*.yaml text eol=lf
