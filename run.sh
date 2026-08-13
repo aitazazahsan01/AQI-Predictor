@@ -8,6 +8,8 @@
 #   ./run.sh backfill          Module 3 - load ~4 years of history
 #   ./run.sh train-offline     Module 4 - train on data fetched straight from the API
 #   ./run.sh train             Module 4 - train from the feature store and register models
+#   ./run.sh eda               Module 9 - regenerate EDA.md from the data
+#   ./run.sh dashboard         Module 6 - serve the Streamlit dashboard locally
 #
 # Extra arguments are passed through, e.g.  ./run.sh daily --all
 
@@ -46,8 +48,10 @@ case "$command" in
   backfill)      exec python scripts/backfill_historical.py "$@" ;;
   train-offline) exec python scripts/run_training_pipeline.py --offline "$@" ;;
   train)         exec python scripts/run_training_pipeline.py "$@" ;;
+  eda)           exec python scripts/run_eda.py "$@" ;;
+  dashboard)     exec streamlit run app/streamlit_app.py "$@" ;;
   *)
-    echo "Usage: ./run.sh {test|hourly|daily|backfill-dry|backfill|train-offline|train} [args...]" >&2
+    echo "Usage: ./run.sh {test|hourly|daily|backfill-dry|backfill|train-offline|train|eda|dashboard} [args...]" >&2
     exit 1
     ;;
 esac
