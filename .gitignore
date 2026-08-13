@@ -25,3 +25,6 @@ Thumbs.db
 # Local-only per-module learning notes (not part of the public repo docs)
 module-docs/
 .pytest_cache/
+
+# Trained model binaries - these belong in the Model Registry, not in git
+models/
