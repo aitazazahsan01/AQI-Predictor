@@ -9,7 +9,7 @@
 [![Open-Meteo](https://img.shields.io/badge/Data-Open--Meteo-FF6F00)](https://open-meteo.com/)
 [![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 [![Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Tests](https://img.shields.io/badge/tests-43%20passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-115%20passing-brightgreen)](tests/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Air pollution kills an estimated 7 million people a year. This project answers a simple question: _how bad will the air be where I live, three days from now?_**
@@ -48,7 +48,7 @@ Everything runs on free tiers: GitHub Actions for scheduling, Hopsworks for the 
 | 🔮 **Forecast horizon** | 3 days (separate model per horizon) |
 | 📊 **Training data** | 1,454 days · 2022-08-05 → present · 100% complete |
 | ⏱️ **Data freshness** | Hourly ingestion, daily retraining |
-| 🧪 **Test coverage** | 43 unit tests |
+| 🧪 **Test coverage** | 115 unit tests |
 
 > 📖 **New here?** [Project_Explanation.md](Project_Explanation.md) explains the whole project in plain language — what each module does and why every technology was chosen.
 > 🛠️ **Building on this?** [PROJECT_PLAN.md](PROJECT_PLAN.md) has the technical spec — schemas, API contracts, and module boundaries.
@@ -67,7 +67,7 @@ Open-Meteo + AQICN  ─►  Hourly ingestion  ─►  Feature engineering  ─�
                               ┌───────────────────────────────────────────────┘
                               ▼
                      Daily model training  ─►  Model Registry  ─►  Streamlit dashboard
-                     (5 model families,          (best model         (forecast · trends ·
+                     (6 model families,          (best model         (forecast · trends ·
                       best one wins)             per horizon)         SHAP · alerts)
 ```
 
@@ -77,12 +77,12 @@ Every arrow above is automated. GitHub Actions triggers ingestion hourly and tra
 
 ## 📊 Project status
 
-**🚧 In active development** — 4 of 9 modules complete.
+**✅ All 9 modules implemented.** Pipelines are ready to run on GitHub Actions.
 
 <div align="center">
 
 ```
-Progress  █████████░░░░░░░░░░░  44%   (4 / 9 modules)
+Progress  ████████████████████  100%  (9 / 9 modules)
 ```
 
 </div>
@@ -93,11 +93,11 @@ Progress  █████████░░░░░░░░░░░  44%   (4
 | **M2** | Daily feature engineering | ✅ **Done** | Aggregates + engineers 27 features → `aqi_daily_features`. Verified on 10 days of real data. 26 tests. |
 | **M3** | Historical backfill | ✅ **Done** | Loads ~4 years of history (1,454 clean days). 17 tests. ⚠️ *Write pending — see [Troubleshooting](#-troubleshooting).* |
 | **M4** | Training pipeline | ✅ **Done** | 6 candidates scored per horizon on 1,469 real days. Best RMSE **8.87** (day 1), **17.47** (day 2), **20.72** (day 3) — all beating the persistence baseline. 67 tests. |
-| **M5** | CI/CD automation | ⬜ Planned | Hourly + daily scheduled workflows. *(Backfill workflow already written.)* |
-| **M6** | Streamlit dashboard | ⬜ Planned | Live AQI, 3-day forecast, trend charts. |
-| **M7** | SHAP explainability | ⬜ Planned | Per-prediction feature attribution. |
-| **M8** | Hazardous AQI alerts | ⬜ Planned | Warning banners on unhealthy forecasts. |
-| **M9** | EDA + final report | ⬜ Planned | Trend analysis notebook and written report. |
+| **M5** | CI/CD automation | ✅ **Done** | Hourly ingestion, daily aggregate-then-train, manual backfill, and a test workflow. |
+| **M6** | Streamlit dashboard | ✅ **Done** | Forecast cards, trend chart, SHAP panel, alert banner. Verified end-to-end. |
+| **M7** | SHAP explainability | ✅ **Done** | Explainer matched to each winning model family. |
+| **M8** | Hazardous AQI alerts | ✅ **Done** | EPA breakpoints in one shared module; warns if any of the 3 days is unhealthy. |
+| **M9** | EDA + final report | ✅ **Done** | [EDA.md](EDA.md) generated from the data, plus [REPORT.md](REPORT.md). |
 
 ### ✅ What works right now
 
@@ -106,7 +106,8 @@ Progress  █████████░░░░░░░░░░░  44%   (4
 - Four years of historical data fetching, verified at **1,454/1,454 complete 24-hour days**
 - Two Hopsworks feature groups, live and populated
 - Multi-model training with per-horizon selection against a persistence baseline
-- 67 unit tests
+- Explained forecasts (SHAP) and hazardous-air alerts
+- 115 unit tests
 
 ### 📊 Current model results
 
@@ -120,10 +121,15 @@ Trained on 1,469 real days, scored on a 90-day chronological hold-out:
 
 Different models win at different horizons, which is exactly why selection happens per horizon rather than once overall. Accuracy degrades sharply with distance — day-3 AQI is genuinely hard, and the persistence baseline actually goes *negative* on R² there (−0.13), meaning "tomorrow equals today" becomes worse than guessing the average.
 
-### 🚧 What's left
+### 📄 Reports
 
-- Scheduled automation, dashboard, explainability, alerts, and the written report (M5–M9)
-- LSTM candidate is implemented but currently skipped locally (TensorFlow install pending); it runs automatically wherever TensorFlow is available
+- **[REPORT.md](REPORT.md)** — full project report: design decisions, results, problems hit, and honest limitations
+- **[EDA.md](EDA.md)** — generated data analysis: seasonality, drivers, predictability
+
+### 🚧 Known gaps
+
+- The **LSTM** is implemented but unbenchmarked — TensorFlow wouldn't install on the development network. It runs automatically wherever TensorFlow is present.
+- The **Model Registry** write path is implemented but untested end-to-end, for the port-blocking reason in [Troubleshooting](#-troubleshooting). Local model persistence works as a substitute.
 
 ---
 
@@ -470,12 +476,12 @@ Expected before the backfill runs, or if hourly ingestion missed hours. `hours_o
 - [x] **M1** · Hourly raw data ingestion
 - [x] **M2** · Daily feature engineering
 - [x] **M3** · Historical backfill (~4 years)
-- [ ] **M4** · Multi-model training + evaluation *(in progress)*
-- [ ] **M5** · Scheduled CI/CD automation
-- [ ] **M6** · Streamlit dashboard
-- [ ] **M7** · SHAP explainability
-- [ ] **M8** · Hazardous AQI alerts
-- [ ] **M9** · EDA notebook + final report
+- [x] **M4** · Multi-model training + evaluation
+- [x] **M5** · Scheduled CI/CD automation
+- [x] **M6** · Streamlit dashboard
+- [x] **M7** · SHAP explainability
+- [x] **M8** · Hazardous AQI alerts
+- [x] **M9** · EDA + final report
 
 ---
 
