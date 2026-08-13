@@ -77,6 +77,27 @@ def save_model_artifact(evaluation: Evaluation, directory: Path) -> None:
         joblib.dump(model, directory / "model.joblib")
 
 
+def save_local_bundle(
+    evaluation: Evaluation,
+    feature_columns: list[str],
+    training_window: tuple[str, str],
+    root: Path,
+) -> Path:
+    """Writes a model plus its metadata to disk, mirroring the registry layout.
+
+    The dashboard prefers the Model Registry, but falls back to this so it can
+    still run on networks that can't reach the Hopsworks data ports.
+    """
+    directory = root / f"h{evaluation.horizon}"
+    if directory.exists():
+        shutil.rmtree(directory)
+
+    save_model_artifact(evaluation, directory)
+    metadata = build_metadata(evaluation, feature_columns, training_window)
+    (directory / "metadata.json").write_text(json.dumps(metadata, indent=2))
+    return directory
+
+
 def register_best_model(
     evaluation: Evaluation,
     feature_columns: list[str],
