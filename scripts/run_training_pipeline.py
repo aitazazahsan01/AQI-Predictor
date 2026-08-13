@@ -42,6 +42,12 @@ def parse_args():
         action="store_true",
         help="Fetch features directly from Open-Meteo instead of the feature store.",
     )
+    parser.add_argument(
+        "--save-local",
+        metavar="DIR",
+        default=None,
+        help="Also write the winning models to DIR so the dashboard can run without the registry.",
+    )
     return parser.parse_args()
 
 
@@ -109,6 +115,17 @@ def main():
         else:
             verdict = "(no baseline to compare against)"
         print(f"  h{horizon}: {best.model_name:<20} RMSE {best.rmse:6.2f}  {verdict}")
+
+    if args.save_local:
+        from pathlib import Path
+
+        from src.training.register import save_local_bundle
+
+        root = Path(args.save_local)
+        print(f"\nSaving models to {root}/ ...")
+        for best in winners.values():
+            directory = save_local_bundle(best, feature_columns, training_window, root)
+            print(f"  h{best.horizon}: {best.model_name} -> {directory}")
 
     if args.no_register or args.offline:
         reason = "--no-register" if args.no_register else "--offline"
