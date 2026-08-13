@@ -43,12 +43,18 @@ def parse_args():
 
 def load_frame(city_slug, offline):
     if not offline:
+        from src.features.availability import describe_usability
+
         try:
             from src.training.data_prep import load_training_frame
 
             frame = load_training_frame(city_slug)
-            if not frame.empty:
-                return frame, "feature store"
+            # A handful of stale rows would produce a confident-looking report
+            # about nothing, so hold stored data to the same bar as the dashboard.
+            usable, reason = describe_usability(frame, min_rows=60)
+            if usable:
+                return frame, f"feature store ({reason})"
+            print(f"Feature store not usable for analysis: {reason}. Falling back to the API.")
         except Exception as exc:
             print(f"Feature store unavailable ({type(exc).__name__}), falling back to the API.")
 

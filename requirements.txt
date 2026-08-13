@@ -8,8 +8,17 @@ hopsworks[python]
 scikit-learn
 xgboost
 statsmodels
-tensorflow-cpu>=2.15
 joblib
+
+# Deep learning candidate (Module 4). Heavy, and the LSTM is skipped
+# automatically when it is absent, so it can be dropped on constrained
+# environments without breaking the training run.
+tensorflow-cpu>=2.15
+
+# Dashboard and explainability (Modules 6 and 7)
+streamlit
+shap
 
 # Testing
 pytest
+pyyaml
