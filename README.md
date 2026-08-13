@@ -77,12 +77,12 @@ Every arrow above is automated. GitHub Actions triggers ingestion hourly and tra
 
 ## 📊 Project status
 
-**🚧 In active development** — 3 of 9 modules complete.
+**🚧 In active development** — 4 of 9 modules complete.
 
 <div align="center">
 
 ```
-Progress  ███████░░░░░░░░░░░░░  33%   (3 / 9 modules)
+Progress  █████████░░░░░░░░░░░  44%   (4 / 9 modules)
 ```
 
 </div>
@@ -92,7 +92,7 @@ Progress  ███████░░░░░░░░░░░░░  33%   (3
 | **M1** | Hourly raw ingestion | ✅ **Done** | Fetches live air quality + weather → `aqi_hourly_raw`. Verified end-to-end against live Hopsworks. |
 | **M2** | Daily feature engineering | ✅ **Done** | Aggregates + engineers 27 features → `aqi_daily_features`. Verified on 10 days of real data. 26 tests. |
 | **M3** | Historical backfill | ✅ **Done** | Loads ~4 years of history (1,454 clean days). 17 tests. ⚠️ *Write pending — see [Troubleshooting](#-troubleshooting).* |
-| **M4** | Training pipeline | 🔜 **Next** | Ridge · Random Forest · XGBoost · SARIMAX · LSTM → best model per horizon → Model Registry. |
+| **M4** | Training pipeline | ✅ **Done** | 6 candidates scored per horizon on 1,469 real days. Best RMSE **8.87** (day 1), **17.47** (day 2), **20.72** (day 3) — all beating the persistence baseline. 67 tests. |
 | **M5** | CI/CD automation | ⬜ Planned | Hourly + daily scheduled workflows. *(Backfill workflow already written.)* |
 | **M6** | Streamlit dashboard | ⬜ Planned | Live AQI, 3-day forecast, trend charts. |
 | **M7** | SHAP explainability | ⬜ Planned | Per-prediction feature attribution. |
@@ -105,12 +105,25 @@ Progress  ███████░░░░░░░░░░░░░  33%   (3
 - Full feature engineering: daily aggregates, calendar features, lags (1/2/3/7 days), rolling mean/std, AQI change rate
 - Four years of historical data fetching, verified at **1,454/1,454 complete 24-hour days**
 - Two Hopsworks feature groups, live and populated
-- 43 unit tests covering all feature logic
+- Multi-model training with per-horizon selection against a persistence baseline
+- 67 unit tests
+
+### 📊 Current model results
+
+Trained on 1,469 real days, scored on a 90-day chronological hold-out:
+
+| Horizon | Winner | RMSE | MAE | R² | vs. baseline |
+|:--:|---|--:|--:|--:|--:|
+| Day 1 | Ridge | 8.87 | 6.72 | 0.843 | **+29.1%** |
+| Day 2 | XGBoost | 17.47 | 14.38 | 0.389 | **+8.5%** |
+| Day 3 | Random Forest | 20.72 | 16.98 | 0.141 | **+12.9%** |
+
+Different models win at different horizons, which is exactly why selection happens per horizon rather than once overall. Accuracy degrades sharply with distance — day-3 AQI is genuinely hard, and the persistence baseline actually goes *negative* on R² there (−0.13), meaning "tomorrow equals today" becomes worse than guessing the average.
 
 ### 🚧 What's left
 
-- Model training and evaluation (M4) — the next piece of work
 - Scheduled automation, dashboard, explainability, alerts, and the written report (M5–M9)
+- LSTM candidate is implemented but currently skipped locally (TensorFlow install pending); it runs automatically wherever TensorFlow is available
 
 ---
 
@@ -277,6 +290,15 @@ python scripts/backfill_historical.py               # actually load it
 # Recurring
 python scripts/run_feature_pipeline.py              # hourly  — collect current conditions
 python scripts/run_daily_aggregation.py             # daily   — build engineered features
+python scripts/run_training_pipeline.py             # daily   — retrain and register models
+```
+
+Or use the wrapper, which handles the venv, `.env` and working directory for you:
+
+```bash
+./run.sh test              # unit tests
+./run.sh backfill-dry      # preview the historical fetch
+./run.sh train-offline     # train on data pulled straight from the API
 ```
 
 | Script | Cadence | What it does | Useful flags |
@@ -284,6 +306,7 @@ python scripts/run_daily_aggregation.py             # daily   — build engineer
 | `backfill_historical.py` | once | Loads history from 2022-08-05 into both feature groups | `--start-date` `--end-date` `--dry-run` |
 | `run_feature_pipeline.py` | hourly | Writes one raw observation row per city | — |
 | `run_daily_aggregation.py` | daily | Builds one engineered feature row per city per day | `--date YYYY-MM-DD` `--all` |
+| `run_training_pipeline.py` | daily | Trains all candidates per horizon, registers the winners | `--offline` `--no-register` `--test-days` |
 
 ---
 
