@@ -1,0 +1,37 @@
+name: Hourly Feature Pipeline
+
+on:
+  schedule:
+    # Every hour, a few minutes past. Open-Meteo's air-quality model has a short
+    # reporting lag, so starting exactly on the hour risks fetching a slot that
+    # isn't populated yet.
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+# A slow run must never overlap the next hour's run and write the same key twice.
+concurrency:
+  group: feature-pipeline
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Ingest current hour
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
+          AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
+        run: python scripts/run_feature_pipeline.py
