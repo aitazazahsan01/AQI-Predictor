@@ -1,0 +1,12 @@
+# Training-only dependencies: everything in requirements.txt plus TensorFlow,
+# which powers the LSTM candidate.
+#
+# Kept separate because TensorFlow is large and lags new Python releases, so
+# including it in the base requirements breaks the dashboard deployment. The
+# LSTM is skipped automatically wherever TensorFlow is absent, so training
+# still works with the base requirements - it just compares five models
+# instead of six.
+
+-r requirements.txt
+
+tensorflow-cpu>=2.15

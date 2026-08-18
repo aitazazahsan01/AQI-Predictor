@@ -320,6 +320,8 @@ Or use the wrapper, which handles the venv, `.env` and working directory for you
 | `run_daily_aggregation.py` | daily | Builds one engineered feature row per city per day | `--date YYYY-MM-DD` `--all` |
 | `run_training_pipeline.py` | daily | Trains all candidates per horizon, registers the winners | `--offline` `--no-register` `--test-days` |
 
+**Dependencies are split in two:** `requirements.txt` covers the pipelines, dashboard and tests. `requirements-train.txt` adds TensorFlow for the LSTM — kept separate because it is large and lags new Python releases, which breaks deployment targets that default to the newest interpreter.
+
 ---
 
 ## 📁 Project structure
@@ -449,6 +451,18 @@ If only `:443` is reachable, it's your network — no code change can fix it.
 <br>
 
 Native Windows can't build the `twofish` dependency. Use **WSL** (recommended) or install the [C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/). See [Getting started](#-getting-started).
+</details>
+
+<details>
+<summary><b>Streamlit Cloud: <code>No solution found when resolving dependencies</code> (tensorflow-cpu)</b></summary>
+
+<br>
+
+Streamlit Cloud defaults to a very recent Python (3.14 at time of writing), and TensorFlow lags new releases by months — no matching wheel exists, so the install fails outright.
+
+TensorFlow is only needed to *train* the LSTM, never to serve the dashboard. So it lives in `requirements-train.txt`, not `requirements.txt`.
+
+If you still hit resolver errors on other packages, pin the interpreter: **Manage app → Settings → Python version → 3.11**, then reboot. Several scientific packages trail the newest Python by a release or two.
 </details>
 
 <details>

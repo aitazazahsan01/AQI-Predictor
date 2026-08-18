@@ -1,19 +1,21 @@
+# Runtime dependencies: pipelines, dashboard and tests.
+#
+# Deliberately excludes TensorFlow. It is only needed to *train* the LSTM
+# candidate, is ~230MB, and has no wheels for the newest Python releases -
+# which breaks deployment targets that default to a very recent interpreter.
+# Training installs requirements-train.txt instead.
+
 # Core pipeline
 requests
 python-dotenv
 pandas
 hopsworks[python]
 
-# Modelling (Module 4)
+# Modelling (Module 4) - also needed at serving time to unpickle models
 scikit-learn
 xgboost
 statsmodels
 joblib
-
-# Deep learning candidate (Module 4). Heavy, and the LSTM is skipped
-# automatically when it is absent, so it can be dropped on constrained
-# environments without breaking the training run.
-tensorflow-cpu>=2.15
 
 # Dashboard and explainability (Modules 6 and 7)
 streamlit
