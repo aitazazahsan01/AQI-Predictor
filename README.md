@@ -91,7 +91,7 @@ Progress  ████████████████████  100%  (9
 |:--:|---|:--:|---|
 | **M1** | Hourly raw ingestion | ✅ **Done** | Fetches live air quality + weather → `aqi_hourly_raw`. Verified end-to-end against live Hopsworks. |
 | **M2** | Daily feature engineering | ✅ **Done** | Aggregates + engineers 27 features → `aqi_daily_features`. Verified on 10 days of real data. 26 tests. |
-| **M3** | Historical backfill | ✅ **Done** | Loads ~4 years of history (1,454 clean days). 17 tests. ⚠️ *Write pending — see [Troubleshooting](#-troubleshooting).* |
+| **M3** | Historical backfill | ✅ **Done** | ~4 years loaded into Hopsworks via GitHub Actions: **35,376 hourly** + **1,474 daily** rows. 17 tests. |
 | **M4** | Training pipeline | ✅ **Done** | 6 candidates scored per horizon on 1,469 real days. Best RMSE **8.87** (day 1), **17.47** (day 2), **20.72** (day 3) — all beating the persistence baseline. 67 tests. |
 | **M5** | CI/CD automation | ✅ **Done** | Hourly ingestion, daily aggregate-then-train, manual backfill, and a test workflow. |
 | **M6** | Streamlit dashboard | ✅ **Done** | Forecast cards, trend chart, SHAP panel, alert banner. Verified end-to-end. |
@@ -126,10 +126,16 @@ Different models win at different horizons, which is exactly why selection happe
 - **[REPORT.md](REPORT.md)** — full project report: design decisions, results, problems hit, and honest limitations
 - **[EDA.md](EDA.md)** — generated data analysis: seasonality, drivers, predictability
 
+### 🟢 Live status
+
+- **Feature store populated** — 35,376 hourly and 1,474 daily rows, backfilled through GitHub Actions
+- **Training verified against the feature store** (not just the API), producing the same results within noise — confirming stored and live features are computed identically
+- **CI green** — all 115 tests pass on GitHub runners
+
 ### 🚧 Known gaps
 
-- The **LSTM** is implemented but unbenchmarked — TensorFlow wouldn't install on the development network. It runs automatically wherever TensorFlow is present.
-- The **Model Registry** write path is implemented but untested end-to-end, for the port-blocking reason in [Troubleshooting](#-troubleshooting). Local model persistence works as a substitute.
+- The **Model Registry** write path runs for the first time on the next scheduled daily job.
+- The **LSTM** is implemented but unbenchmarked locally (TensorFlow wouldn't install on the development network). The daily workflow installs it, so it joins the comparison on the next run.
 
 ---
 
