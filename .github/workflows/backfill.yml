@@ -9,11 +9,11 @@ on:
   workflow_dispatch:
     inputs:
       start_date:
-        description: "First day to backfill (YYYY-MM-DD). Defaults to earliest available (2022-08-05)."
+        description: "First day to backfill (YYYY-MM-DD). Blank = earliest available."
         required: false
         default: "2022-08-05"
       end_date:
-        description: "Last day to backfill (YYYY-MM-DD). Defaults to yesterday."
+        description: "Last day to backfill (YYYY-MM-DD). Blank = yesterday."
         required: false
         default: ""
       dry_run:
@@ -30,6 +30,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Fail in seconds on a misconfiguration rather than after a long install.
+      # Only emptiness is checked - values are never printed.
+      - name: Check required secrets
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
+        run: |
+          missing=""
+          [ -z "$HOPSWORKS_API_KEY" ] && missing="$missing HOPSWORKS_API_KEY"
+          [ -z "$HOPSWORKS_PROJECT_NAME" ] && missing="$missing HOPSWORKS_PROJECT_NAME"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing"
+            echo "Add them under Settings > Secrets and variables > Actions."
+            echo "Names are case-sensitive and must match exactly."
+            exit 1
+          fi
+          echo "Required secrets are present."
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -43,13 +61,15 @@ jobs:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
           HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
           AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
+          START_DATE: ${{ inputs.start_date }}
+          END_DATE: ${{ inputs.end_date }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          ARGS="--start-date ${{ inputs.start_date }}"
-          if [ -n "${{ inputs.end_date }}" ]; then
-            ARGS="$ARGS --end-date ${{ inputs.end_date }}"
-          fi
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
-            ARGS="$ARGS --dry-run"
-          fi
-          echo "Running: python scripts/backfill_historical.py $ARGS"
-          python scripts/backfill_historical.py $ARGS
+          # Built as an array so a blank input drops the flag entirely rather
+          # than passing a dangling "--start-date" with no value.
+          ARGS=()
+          [ -n "$START_DATE" ] && ARGS+=(--start-date "$START_DATE")
+          [ -n "$END_DATE" ] && ARGS+=(--end-date "$END_DATE")
+          [ "$DRY_RUN" = "true" ] && ARGS+=(--dry-run)
+          echo "Running: python scripts/backfill_historical.py ${ARGS[*]}"
+          python scripts/backfill_historical.py "${ARGS[@]}"
