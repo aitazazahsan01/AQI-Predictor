@@ -9,7 +9,8 @@
 [![Open-Meteo](https://img.shields.io/badge/Data-Open--Meteo-FF6F00)](https://open-meteo.com/)
 [![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 [![Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
-[![Tests](https://img.shields.io/badge/tests-115%20passing-brightgreen)](tests/)
+[![Next.js](https://img.shields.io/badge/Website-Next.js-000000?logo=nextdotjs&logoColor=white)](web/)
+[![Tests](https://img.shields.io/badge/tests-144%20passing-brightgreen)](tests/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Air pollution kills an estimated 7 million people a year. This project answers a simple question: _how bad will the air be where I live, three days from now?_**
@@ -25,6 +26,7 @@
 - [Project status](#-project-status)
 - [How it works](#-how-it-works)
 - [Data & features](#-data--features)
+- [The website](#-the-website)
 - [Tech stack](#-tech-stack)
 - [Getting started](#-getting-started)
 - [Running the pipelines](#-running-the-pipelines)
@@ -66,9 +68,13 @@ Open-Meteo + AQICN  ─►  Hourly ingestion  ─►  Feature engineering  ─�
                                                                               │
                               ┌───────────────────────────────────────────────┘
                               ▼
-                     Daily model training  ─►  Model Registry  ─►  Streamlit dashboard
-                     (6 model families,          (best model         (forecast · trends ·
-                      best one wins)             per horizon)         SHAP · alerts)
+                     Daily model training  ─►  Model Registry  ─►  forecast.json
+                     (6 model families,          (best model              │
+                      best one wins)             per horizon)             │
+                                                              ┌───────────┴───────────┐
+                                                              ▼                       ▼
+                                                     Next.js website        Streamlit dashboard
+                                                  (public, static)        (internal, live)
 ```
 
 Every arrow above is automated. GitHub Actions triggers ingestion hourly and training daily; nothing requires a human once it's running.
@@ -77,12 +83,12 @@ Every arrow above is automated. GitHub Actions triggers ingestion hourly and tra
 
 ## 📊 Project status
 
-**✅ All 9 modules implemented.** Pipelines are ready to run on GitHub Actions.
+**✅ All 9 required modules implemented, plus a public website.** Pipelines run on GitHub Actions.
 
 <div align="center">
 
 ```
-Progress  ████████████████████  100%  (9 / 9 modules)
+Progress  ████████████████████  100%  (9 / 9 modules + website)
 ```
 
 </div>
@@ -98,6 +104,7 @@ Progress  ████████████████████  100%  (9
 | **M7** | SHAP explainability | ✅ **Done** | Explainer matched to each winning model family. |
 | **M8** | Hazardous AQI alerts | ✅ **Done** | EPA breakpoints in one shared module; warns if any of the 3 days is unhealthy. |
 | **M9** | EDA + final report | ✅ **Done** | [EDA.md](EDA.md) generated from the data, plus [REPORT.md](REPORT.md). |
+| **M10** | Next.js website | ✅ **Done** | Statically exported front end on the Modernist design system, fed by a JSON snapshot the pipeline publishes. 21 tests. |
 
 ### ✅ What works right now
 
@@ -223,6 +230,58 @@ The Streamlit dashboard then loads those models plus the latest features and ren
 
 ---
 
+## 🌐 The website
+
+A statically exported **Next.js** front end, built on the **Modernist** design
+system: flat and architectural, set entirely in Archivo, near-mono red on a
+light ground, zero corner radius and strong 2px rules.
+
+**It has no server, no database and no credentials.** Everything it renders
+comes from a single file, `web/public/data/forecast.json`, written by:
+
+```bash
+python scripts/export_web_data.py     # or:  ./run.sh export-web
+```
+
+That script is the only thing that reaches Hopsworks, loads the models and runs
+SHAP — and it runs where the secrets already live, inside GitHub Actions, right
+after the nightly training job. It commits the refreshed snapshot back to
+`main`, which triggers a redeploy. The trust boundary never moves.
+
+| | |
+|---|---|
+| **Forecast** | Three ruled cells, one per day, each labelled with the model that produced it |
+| **Trend** | 45 observed days then the 3 predicted ones, hand-drawn SVG — no charting library |
+| **Drivers** | Precomputed SHAP contributions, switchable per horizon with no round trip |
+| **Models** | Winning model, RMSE/MAE/R², and whether it loaded from the registry or a local bundle |
+| **Provenance** | Feature source and snapshot timestamp, stated rather than implied |
+
+### Running it locally
+
+```bash
+cd web && npm install && npm run dev      # or:  ./run.sh web
+```
+
+`forecast.json` is committed, so the site runs offline against the last
+published snapshot.
+
+### Deploying
+
+**GitHub Pages** — `.github/workflows/deploy_web.yml` handles it. One-time
+setup: *Settings → Pages → Build and deployment → Source: **GitHub Actions***.
+
+**Vercel** — point a project at `web/`, framework preset Next.js, leave
+`BASE_PATH` unset.
+
+> **One deliberate departure from the design system.** The AQI category colours
+> (`#00E400` green through `#7E0023` maroon) are used verbatim instead of being
+> themed. They are a published US EPA standard, not a brand decision —
+> recolouring them to fit the palette would misinform the reader.
+
+More detail in [web/README.md](web/README.md).
+
+---
+
 ## 🛠️ Tech stack
 
 <table>
@@ -233,6 +292,7 @@ The Streamlit dashboard then loads those models plus the latest features and ren
 <tr><td><b>Explainability</b></td><td>SHAP</td></tr>
 <tr><td><b>Automation</b></td><td>GitHub Actions</td></tr>
 <tr><td><b>Dashboard</b></td><td>Streamlit · Streamlit Community Cloud</td></tr>
+<tr><td><b>Website</b></td><td>Next.js 15 (static export) · TypeScript · Modernist design system</td></tr>
 <tr><td><b>Testing</b></td><td>pytest</td></tr>
 </table>
 
@@ -342,8 +402,13 @@ AQI-Predictor/
 │   └── hopsworks_utils/
 │       ├── connection.py          # Hopsworks login
 │       └── feature_groups.py      # feature group definitions
+├── web/                           # M10 · the public website
+│   ├── src/app/                   # Next.js App Router pages
+│   ├── src/components/            # UI, one CSS Module each
+│   ├── src/styles/modernist.css   # vendored design system (read-only)
+│   └── public/data/forecast.json  # the published snapshot the site renders
 ├── scripts/                       # CLI entrypoints (what CI actually runs)
-├── tests/                         # 43 unit tests
+├── tests/                         # 144 unit tests
 ├── PROJECT_PLAN.md                # technical spec
 ├── Project_Explanation.md         # plain-language guide
 └── requirements.txt
@@ -502,6 +567,7 @@ Expected before the backfill runs, or if hourly ingestion missed hours. `hours_o
 - [x] **M7** · SHAP explainability
 - [x] **M8** · Hazardous AQI alerts
 - [x] **M9** · EDA + final report
+- [x] **M10** · Next.js website on the Modernist design system
 
 ---
 

@@ -1,0 +1,208 @@
+/* Application layer.
+ *
+ * Everything here is composed from Modernist tokens - no raw hex, no invented
+ * font, no ad-hoc px where a --space-* exists. It adds only the page-level
+ * scaffolding the design system does not ship: the shell, the section rhythm
+ * and the modular grid that the layout style calls for.
+ */
+
+/* next/font loads Archivo and exposes it as --font-archivo. Rebinding the
+ * design system's own variables here means every rule downstream keeps
+ * reading from the token, exactly as the system intends. */
+:root {
+  --font-heading: var(--font-archivo), "Archivo", system-ui, sans-serif;
+  --font-body: var(--font-archivo), "Archivo", system-ui, sans-serif;
+
+  /* Composed from the scale rather than added to it. */
+  --space-12: calc(var(--space-8) * 1.5);
+  --space-16: calc(var(--space-8) * 2);
+  --rule: 2px solid var(--color-divider);
+  --rule-hair: 1px solid var(--color-divider);
+  --shell-max: 1240px;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* The header is sticky, so an anchored section must stop below it rather
+   than underneath it. */
+[id] {
+  scroll-margin-top: 76px;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  text-rendering: optimizeLegibility;
+}
+
+/* — shell: the page column, with the grid made visible at its edges — */
+.shell {
+  width: 100%;
+  max-width: var(--shell-max);
+  margin-inline: auto;
+  padding-inline: var(--space-6);
+}
+
+@media (min-width: 900px) {
+  .shell {
+    padding-inline: var(--space-8);
+  }
+}
+
+/* — sections: separated by strong rules, never by whitespace alone — */
+.section {
+  border-top: var(--rule);
+  padding-block: var(--space-12);
+}
+
+.section:first-of-type {
+  border-top: 0;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+
+.section-head h2 {
+  margin: 0;
+}
+
+.kicker {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent-700);
+  margin: 0 0 var(--space-2);
+}
+
+.lede {
+  font-size: 16px;
+  max-width: 62ch;
+  color: color-mix(in srgb, var(--color-text) 72%, transparent);
+}
+
+/* — the modular grid: equal cells, ruled between — */
+.grid {
+  display: grid;
+  gap: 0;
+}
+
+.grid > * {
+  padding: var(--space-6);
+  border-left: var(--rule);
+}
+
+.grid > *:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.grid-3 {
+  grid-template-columns: 1fr;
+}
+
+.grid-3 > * {
+  border-left: 0;
+  border-top: var(--rule);
+  padding-inline: 0;
+}
+
+.grid-3 > *:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+@media (min-width: 820px) {
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-3 > * {
+    border-top: 0;
+    border-left: var(--rule);
+    padding: var(--space-6);
+  }
+
+  .grid-3 > *:first-child {
+    border-left: 0;
+    padding-left: 0;
+  }
+}
+
+/* — display numerals: the one place type goes poster-scale — */
+.display {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  line-height: 0.86;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  margin: 0;
+}
+
+.mono-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* — the poster statement: accent as a field, not an accent — */
+.poster {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.poster a {
+  color: var(--color-bg);
+}
+
+/* Modernist keeps labels flush left even in wide buttons. */
+.btn-block {
+  justify-content: flex-start;
+}
+
+/* Wide content scrolls inside its own box; the page never scrolls sideways. */
+.scroll-x {
+  overflow-x: auto;
+}
+
+/* Available to a screen reader, absent from the layout. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media print {
+  .no-print {
+    display: none;
+  }
+}

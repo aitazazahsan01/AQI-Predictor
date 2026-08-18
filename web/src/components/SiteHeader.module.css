@@ -1,0 +1,101 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--color-bg);
+  border-bottom: var(--rule);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  min-height: 60px;
+  padding-block: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  text-decoration: none;
+  margin-right: auto;
+}
+
+/* A square, not a logo: zero radius is the point of the system. */
+.mark {
+  width: 14px;
+  height: 14px;
+  background: var(--color-accent);
+  flex: none;
+}
+
+.nav {
+  display: none;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.link {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+  text-decoration: none;
+  padding-block: var(--space-1);
+  border-bottom: 2px solid transparent;
+}
+
+.link:hover {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.stamp {
+  display: none;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text) 50%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+
+.repo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text);
+  text-decoration: none;
+  border: var(--rule-hair);
+  padding: 5px 10px;
+}
+
+.repo:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+}
+
+@media (min-width: 760px) {
+  .nav {
+    display: flex;
+  }
+}
+
+@media (min-width: 1080px) {
+  .stamp {
+    display: inline;
+  }
+}

@@ -1,0 +1,378 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-18T11:06:42+00:00",
+  "city": {
+    "slug": "islamabad",
+    "name": "Islamabad, Pakistan",
+    "latitude": 33.6844,
+    "longitude": 73.0479
+  },
+  "feature_source": "live Open-Meteo fetch - feature store unreachable (ModuleNotFoundError)",
+  "observed_days": 56,
+  "latest": {
+    "date": "2026-08-17",
+    "aqi": 113.92,
+    "aqi_max": 153.0,
+    "aqi_min": 100.0,
+    "category": "Unhealthy for Sensitive Groups",
+    "color": "#FF7E00",
+    "advice": "People with heart or lung disease, older adults and children should limit prolonged outdoor exertion.",
+    "conditions": [
+      {
+        "label": "PM2.5",
+        "value": 36.17,
+        "unit": "ug/m3"
+      },
+      {
+        "label": "PM10",
+        "value": 44.25,
+        "unit": "ug/m3"
+      },
+      {
+        "label": "Ozone",
+        "value": 101.96,
+        "unit": "ug/m3"
+      },
+      {
+        "label": "Nitrogen dioxide",
+        "value": 26.71,
+        "unit": "ug/m3"
+      },
+      {
+        "label": "Temperature",
+        "value": 27.38,
+        "unit": "C"
+      },
+      {
+        "label": "Humidity",
+        "value": 84.75,
+        "unit": "%"
+      },
+      {
+        "label": "Wind speed",
+        "value": 5.93,
+        "unit": "km/h"
+      },
+      {
+        "label": "Rainfall",
+        "value": 12.9,
+        "unit": "mm"
+      }
+    ]
+  },
+  "station": null,
+  "forecast": [
+    {
+      "horizon": 1,
+      "date": "2026-08-18",
+      "aqi": 111.8,
+      "category": "Unhealthy for Sensitive Groups",
+      "color": "#FF7E00",
+      "model_type": "ridge"
+    },
+    {
+      "horizon": 2,
+      "date": "2026-08-19",
+      "aqi": 118.9,
+      "category": "Unhealthy for Sensitive Groups",
+      "color": "#FF7E00",
+      "model_type": "ridge"
+    },
+    {
+      "horizon": 3,
+      "date": "2026-08-20",
+      "aqi": 118.8,
+      "category": "Unhealthy for Sensitive Groups",
+      "color": "#FF7E00",
+      "model_type": "random_forest"
+    }
+  ],
+  "alert": null,
+  "history": [
+    {
+      "date": "2026-07-04",
+      "aqi": 133.08
+    },
+    {
+      "date": "2026-07-05",
+      "aqi": 137.42
+    },
+    {
+      "date": "2026-07-06",
+      "aqi": 153.04
+    },
+    {
+      "date": "2026-07-07",
+      "aqi": 157.5
+    },
+    {
+      "date": "2026-07-08",
+      "aqi": 162.96
+    },
+    {
+      "date": "2026-07-09",
+      "aqi": 167.62
+    },
+    {
+      "date": "2026-07-10",
+      "aqi": 148.46
+    },
+    {
+      "date": "2026-07-11",
+      "aqi": 128.08
+    },
+    {
+      "date": "2026-07-12",
+      "aqi": 109.17
+    },
+    {
+      "date": "2026-07-13",
+      "aqi": 122.38
+    },
+    {
+      "date": "2026-07-14",
+      "aqi": 119.21
+    },
+    {
+      "date": "2026-07-15",
+      "aqi": 128.79
+    },
+    {
+      "date": "2026-07-16",
+      "aqi": 135.38
+    },
+    {
+      "date": "2026-07-17",
+      "aqi": 140.79
+    },
+    {
+      "date": "2026-07-18",
+      "aqi": 142.71
+    },
+    {
+      "date": "2026-07-19",
+      "aqi": 113.25
+    },
+    {
+      "date": "2026-07-20",
+      "aqi": 96.46
+    },
+    {
+      "date": "2026-07-21",
+      "aqi": 78.17
+    },
+    {
+      "date": "2026-07-22",
+      "aqi": 64.25
+    },
+    {
+      "date": "2026-07-23",
+      "aqi": 81.08
+    },
+    {
+      "date": "2026-07-24",
+      "aqi": 94.38
+    },
+    {
+      "date": "2026-07-25",
+      "aqi": 90.79
+    },
+    {
+      "date": "2026-07-26",
+      "aqi": 91.88
+    },
+    {
+      "date": "2026-07-27",
+      "aqi": 109.71
+    },
+    {
+      "date": "2026-07-28",
+      "aqi": 108.75
+    },
+    {
+      "date": "2026-07-29",
+      "aqi": 112.42
+    },
+    {
+      "date": "2026-07-30",
+      "aqi": 125.79
+    },
+    {
+      "date": "2026-07-31",
+      "aqi": 106.25
+    },
+    {
+      "date": "2026-08-01",
+      "aqi": 95.96
+    },
+    {
+      "date": "2026-08-02",
+      "aqi": 96.17
+    },
+    {
+      "date": "2026-08-03",
+      "aqi": 102.88
+    },
+    {
+      "date": "2026-08-04",
+      "aqi": 134.0
+    },
+    {
+      "date": "2026-08-05",
+      "aqi": 151.46
+    },
+    {
+      "date": "2026-08-06",
+      "aqi": 128.67
+    },
+    {
+      "date": "2026-08-07",
+      "aqi": 121.0
+    },
+    {
+      "date": "2026-08-08",
+      "aqi": 115.29
+    },
+    {
+      "date": "2026-08-09",
+      "aqi": 117.58
+    },
+    {
+      "date": "2026-08-10",
+      "aqi": 116.62
+    },
+    {
+      "date": "2026-08-11",
+      "aqi": 124.75
+    },
+    {
+      "date": "2026-08-12",
+      "aqi": 143.33
+    },
+    {
+      "date": "2026-08-13",
+      "aqi": 159.42
+    },
+    {
+      "date": "2026-08-14",
+      "aqi": 131.79
+    },
+    {
+      "date": "2026-08-15",
+      "aqi": 128.25
+    },
+    {
+      "date": "2026-08-16",
+      "aqi": 143.71
+    },
+    {
+      "date": "2026-08-17",
+      "aqi": 113.92
+    }
+  ],
+  "drivers": [
+    {
+      "horizon": 1,
+      "model_type": "ridge",
+      "unavailable": "ImportError: Numba needs NumPy 2.3 or less. Got NumPy 2.5.",
+      "features": []
+    },
+    {
+      "horizon": 2,
+      "model_type": "ridge",
+      "unavailable": "ImportError: Numba needs NumPy 2.3 or less. Got NumPy 2.5.",
+      "features": []
+    },
+    {
+      "horizon": 3,
+      "model_type": "random_forest",
+      "unavailable": "ImportError: Numba needs NumPy 2.3 or less. Got NumPy 2.5.",
+      "features": []
+    }
+  ],
+  "models": [
+    {
+      "horizon": 1,
+      "model_type": "ridge",
+      "source": "local",
+      "metrics": {
+        "rmse": 9.03,
+        "mae": 6.8,
+        "r2": 0.84
+      },
+      "n_features": 26
+    },
+    {
+      "horizon": 2,
+      "model_type": "ridge",
+      "source": "local",
+      "metrics": {
+        "rmse": 17.94,
+        "mae": 14.01,
+        "r2": 0.38
+      },
+      "n_features": 26
+    },
+    {
+      "horizon": 3,
+      "model_type": "random_forest",
+      "source": "local",
+      "metrics": {
+        "rmse": 21.12,
+        "mae": 17.2,
+        "r2": 0.14
+      },
+      "n_features": 26
+    }
+  ],
+  "scale": [
+    {
+      "name": "Good",
+      "lower": 0,
+      "upper": 50,
+      "color": "#00E400",
+      "alert_level": "none",
+      "advice": "Air quality is satisfactory and poses little or no risk."
+    },
+    {
+      "name": "Moderate",
+      "lower": 51,
+      "upper": 100,
+      "color": "#FFFF00",
+      "alert_level": "none",
+      "advice": "Acceptable, though unusually sensitive people should consider limiting prolonged outdoor exertion."
+    },
+    {
+      "name": "Unhealthy for Sensitive Groups",
+      "lower": 101,
+      "upper": 150,
+      "color": "#FF7E00",
+      "alert_level": "none",
+      "advice": "People with heart or lung disease, older adults and children should limit prolonged outdoor exertion."
+    },
+    {
+      "name": "Unhealthy",
+      "lower": 151,
+      "upper": 200,
+      "color": "#FF0000",
+      "alert_level": "warning",
+      "advice": "Everyone may begin to experience health effects. Limit prolonged outdoor exertion."
+    },
+    {
+      "name": "Very Unhealthy",
+      "lower": 201,
+      "upper": 300,
+      "color": "#8F3F97",
+      "alert_level": "critical",
+      "advice": "Health alert: everyone may experience more serious health effects. Avoid outdoor exertion."
+    },
+    {
+      "name": "Hazardous",
+      "lower": 301,
+      "upper": null,
+      "color": "#7E0023",
+      "alert_level": "critical",
+      "advice": "Health warning of emergency conditions. Everyone should avoid all outdoor exertion."
+    }
+  ]
+}

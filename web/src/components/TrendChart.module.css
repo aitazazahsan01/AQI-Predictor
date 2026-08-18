@@ -1,0 +1,105 @@
+.figure {
+  margin: 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.grid {
+  stroke: color-mix(in srgb, var(--color-text) 16%, transparent);
+  stroke-width: 1;
+}
+
+.axis {
+  stroke: var(--color-divider);
+  stroke-width: 2;
+}
+
+.divider {
+  stroke: color-mix(in srgb, var(--color-text) 45%, transparent);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.observed {
+  fill: none;
+  stroke: var(--color-text);
+  stroke-width: 2;
+  stroke-linejoin: miter;
+  stroke-linecap: butt;
+}
+
+.forecast {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-dasharray: 7 4;
+  stroke-linejoin: miter;
+  stroke-linecap: butt;
+}
+
+.forecastPoint {
+  fill: var(--color-accent);
+}
+
+.axisLabel {
+  fill: color-mix(in srgb, var(--color-text) 55%, transparent);
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.bandLabel {
+  fill: color-mix(in srgb, var(--color-text) 40%, transparent);
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.marker {
+  fill: var(--color-accent-700);
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.legend {
+  display: flex;
+  gap: var(--space-6);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: var(--rule-hair);
+  font-size: 12px;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+}
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.keyObserved,
+.keyForecast {
+  width: 22px;
+  height: 2px;
+  flex: none;
+}
+
+.keyObserved {
+  background: var(--color-text);
+}
+
+.keyForecast {
+  background: repeating-linear-gradient(
+    to right,
+    var(--color-accent) 0 7px,
+    transparent 7px 11px
+  );
+}

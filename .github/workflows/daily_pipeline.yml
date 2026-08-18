@@ -19,6 +19,10 @@ concurrency:
   group: daily-pipeline
   cancel-in-progress: false
 
+permissions:
+  # The published snapshot is committed back to the repository.
+  contents: write
+
 jobs:
   aggregate-and-train:
     runs-on: ubuntu-latest
@@ -49,3 +53,28 @@ jobs:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
           HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
         run: python scripts/run_training_pipeline.py
+
+      # The website is static and holds no credentials, so this job - which
+      # already has them - is the only place that can produce its data.
+      - name: Export the snapshot for the website
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
+          AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
+        run: python scripts/export_web_data.py
+
+      - name: Commit the snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/public/data/forecast.json
+          # Nothing to commit is a normal outcome on a re-run, not a failure.
+          if git diff --staged --quiet; then
+            echo "Snapshot unchanged."
+          else
+            # No [skip ci]: this commit is exactly what should trigger a
+            # redeploy of the website.
+            git commit -m "data: refresh forecast snapshot"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

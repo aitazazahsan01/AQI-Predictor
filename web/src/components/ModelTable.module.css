@@ -1,0 +1,27 @@
+.note {
+  font-size: 13px;
+  max-width: 46ch;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+  margin: 0;
+}
+
+.horizon {
+  font-family: var(--font-heading);
+  font-weight: var(--font-heading-weight);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.model {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.footnote {
+  margin: var(--space-6) 0 0;
+  font-size: 13px;
+  max-width: 76ch;
+  color: color-mix(in srgb, var(--color-text) 58%, transparent);
+}
