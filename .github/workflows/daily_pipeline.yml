@@ -1,0 +1,53 @@
+name: Daily Aggregation and Training
+
+# Aggregation and training share one workflow because training is only
+# meaningful once the day's features exist. Two independently-scheduled jobs
+# could race; sequential steps here cannot.
+on:
+  schedule:
+    # 00:20 UTC - after the last hourly run of the previous UTC day has landed.
+    - cron: "20 0 * * *"
+  workflow_dispatch:
+    inputs:
+      skip_training:
+        description: "Aggregate features but don't retrain"
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: daily-pipeline
+  cancel-in-progress: false
+
+jobs:
+  aggregate-and-train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          # Heavier ML stack only this job needs. TensorFlow enables the LSTM
+          # candidate, which is skipped automatically when absent.
+          pip install scikit-learn xgboost statsmodels joblib "tensorflow-cpu>=2.15"
+
+      - name: Aggregate yesterday into daily features
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
+        run: python scripts/run_daily_aggregation.py
+
+      - name: Retrain and register models
+        if: ${{ !inputs.skip_training }}
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
+        run: python scripts/run_training_pipeline.py
