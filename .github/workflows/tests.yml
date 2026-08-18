@@ -1,0 +1,30 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install scikit-learn xgboost statsmodels joblib
+
+      # No credentials needed: the suite covers pure functions only, so it runs
+      # on forks and pull requests without access to any secrets.
+      - name: Run tests
+        run: python -m pytest tests/ -v

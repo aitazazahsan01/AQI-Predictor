@@ -1,0 +1,55 @@
+name: Historical Backfill
+
+# Manually triggered, not scheduled — this is a one-off seeding job.
+#
+# Running it here rather than locally is also the reliable option: writing to the
+# Hopsworks offline store needs outbound access to HopsFS (:8020) and Kafka
+# (:9092), which many campus/corporate networks block. GitHub runners don't.
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "First day to backfill (YYYY-MM-DD). Defaults to earliest available (2022-08-05)."
+        required: false
+        default: "2022-08-05"
+      end_date:
+        description: "Last day to backfill (YYYY-MM-DD). Defaults to yesterday."
+        required: false
+        default: ""
+      dry_run:
+        description: "Fetch and summarise without writing anything"
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run backfill
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+          HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
+          AQICN_TOKEN: ${{ secrets.AQICN_TOKEN }}
+        run: |
+          ARGS="--start-date ${{ inputs.start_date }}"
+          if [ -n "${{ inputs.end_date }}" ]; then
+            ARGS="$ARGS --end-date ${{ inputs.end_date }}"
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          echo "Running: python scripts/backfill_historical.py $ARGS"
+          python scripts/backfill_historical.py $ARGS
