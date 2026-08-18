@@ -1,0 +1,48 @@
+.note {
+  font-size: 13px;
+  max-width: 44ch;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+  margin: 0;
+}
+
+.swatchCol {
+  width: 34px;
+}
+
+.swatch {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 1px solid color-mix(in srgb, var(--color-text) 35%, transparent);
+}
+
+.range {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.name {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.flag {
+  display: inline-block;
+  margin-left: var(--space-2);
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  vertical-align: middle;
+}
+
+.advice {
+  font-size: 13px;
+  color: color-mix(in srgb, var(--color-text) 72%, transparent);
+  min-width: 32ch;
+}
