@@ -48,15 +48,22 @@ Other scripts:
 
 ## Deployment
 
-**GitHub Pages** (what `.github/workflows/deploy_web.yml` does) — one-time
-setup: *Settings → Pages → Build and deployment → Source: **GitHub Actions***.
-The workflow builds with `BASE_PATH=/<repo>` so asset URLs resolve under the
-repository subpath.
+**Vercel** is what this deploys to. Import the repository, then set:
 
-**Vercel** — point a project at the `web/` directory, framework preset Next.js,
-and leave `BASE_PATH` unset. Delete the Pages workflow if you go this way.
+| Setting | Value |
+| --- | --- |
+| Root Directory | `web` |
+| Framework Preset | Next.js *(auto-detected)* |
+| Build Command | *(leave default)* |
+| Environment variables | *(none — `BASE_PATH` stays unset)* |
 
-Any static host works: `npm run build` produces a plain folder of HTML.
+Vercel redeploys on every push to `main`, which includes the nightly
+`data: refresh forecast snapshot` commit from the pipeline. Nothing else needs
+wiring up.
+
+**Any other static host** works too: `npm run build` produces a plain folder of
+HTML in `out/`. If you serve it from a subpath (GitHub Pages serves at
+`/<repo>/`), build with `BASE_PATH=/<repo>` so asset URLs resolve.
 
 ## Design system
 
