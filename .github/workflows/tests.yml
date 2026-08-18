@@ -20,9 +20,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install scikit-learn xgboost statsmodels joblib
+        run: pip install -r requirements.txt
 
       # No credentials needed: the suite covers pure functions only, so it runs
       # on forks and pull requests without access to any secrets.
