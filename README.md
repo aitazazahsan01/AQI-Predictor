@@ -267,11 +267,13 @@ published snapshot.
 
 ### Deploying
 
-**GitHub Pages** — `.github/workflows/deploy_web.yml` handles it. One-time
-setup: *Settings → Pages → Build and deployment → Source: **GitHub Actions***.
+Hosted on **Vercel**: import the repo, set **Root Directory** to `web`, and
+leave everything else on defaults. Vercel redeploys on every push to `main` —
+including the nightly snapshot commit from the pipeline — so the site refreshes
+itself with no extra wiring.
 
-**Vercel** — point a project at `web/`, framework preset Next.js, leave
-`BASE_PATH` unset.
+`npm run build` also produces a plain `out/` folder for any other static host.
+Serving from a subpath needs `BASE_PATH=/<subpath>` at build time.
 
 > **One deliberate departure from the design system.** The AQI category colours
 > (`#00E400` green through `#7E0023` maroon) are used verbatim instead of being
