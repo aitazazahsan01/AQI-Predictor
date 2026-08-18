@@ -50,70 +50,101 @@ class ForecastDay:
         }
 
 
-def load_local_models(root: Path = DEFAULT_LOCAL_MODEL_DIR) -> dict[int, LoadedModel]:
-    """Loads models previously written by `run_training_pipeline.py --save-local`."""
+def _load_artifact(directory: Path, metadata: dict):
+    """Rebuilds a fitted forecaster from a saved bundle.
+
+    Branches on `family` because the LSTM cannot be pickled: it is saved as a
+    Keras file plus its preprocessing, and has to be reassembled around them.
+    """
     import joblib
 
+    if metadata.get("family") == "tensorflow":
+        from tensorflow import keras  # only installed where training happens
+
+        from src.training.models import LstmForecaster
+
+        preprocessing = joblib.load(directory / "preprocessing.joblib")
+        forecaster = LstmForecaster(sequence_length=preprocessing["sequence_length"])
+        forecaster._model = keras.models.load_model(directory / "model.keras")
+        forecaster._imputer = preprocessing["imputer"]
+        forecaster._scaler = preprocessing["scaler"]
+        forecaster._history_tail = preprocessing["history_tail"]
+        return forecaster
+
+    return joblib.load(directory / "model.joblib")
+
+
+def _build_loaded(horizon: int, directory: Path, source: str) -> LoadedModel:
+    metadata = json.loads((directory / "metadata.json").read_text())
+    return LoadedModel(
+        horizon=horizon,
+        model=_load_artifact(directory, metadata),
+        feature_columns=metadata["feature_columns"],
+        model_type=metadata.get("model_type", "unknown"),
+        metrics=metadata.get("metrics", {}),
+        source=source,
+    )
+
+
+def load_local_models(root: Path = DEFAULT_LOCAL_MODEL_DIR) -> dict[int, LoadedModel]:
+    """Loads models previously written by `run_training_pipeline.py --save-local`."""
     models: dict[int, LoadedModel] = {}
     for horizon in HORIZONS:
         directory = Path(root) / f"h{horizon}"
-        metadata_path = directory / "metadata.json"
-        model_path = directory / "model.joblib"
-        if not (metadata_path.exists() and model_path.exists()):
+        if not (directory / "metadata.json").exists():
             continue
-
-        metadata = json.loads(metadata_path.read_text())
-        models[horizon] = LoadedModel(
-            horizon=horizon,
-            model=joblib.load(model_path),
-            feature_columns=metadata["feature_columns"],
-            model_type=metadata.get("model_type", "unknown"),
-            metrics=metadata.get("metrics", {}),
-            source="local",
-        )
+        try:
+            models[horizon] = _build_loaded(horizon, directory, source="local")
+        except Exception as exc:
+            print(f"Skipping local h{horizon}: {type(exc).__name__}: {exc}")
     return models
 
 
 def load_registry_models(model_registry=None) -> dict[int, LoadedModel]:
-    """Loads the current best model per horizon from the Hopsworks Model Registry."""
-    import joblib
+    """Loads the current best model per horizon from the Hopsworks Model Registry.
 
-    from src.training.register import model_name
-
+    Each horizon is loaded independently so that one unusable entry - a model
+    whose framework isn't installed here, or one that was never registered -
+    costs only that horizon rather than the whole forecast.
+    """
     if model_registry is None:
         from src.hopsworks_utils.connection import get_model_registry
 
         model_registry = get_model_registry()
 
+    from src.training.register import model_name
+
     models: dict[int, LoadedModel] = {}
     for horizon in HORIZONS:
-        registered = model_registry.get_model(model_name(horizon))
-        directory = Path(registered.download())
-        metadata = json.loads((directory / "metadata.json").read_text())
-        models[horizon] = LoadedModel(
-            horizon=horizon,
-            model=joblib.load(directory / "model.joblib"),
-            feature_columns=metadata["feature_columns"],
-            model_type=metadata.get("model_type", "unknown"),
-            metrics=metadata.get("metrics", {}),
-            source="registry",
-        )
+        try:
+            registered = model_registry.get_model(model_name(horizon))
+            if registered is None:
+                raise LookupError(f"{model_name(horizon)} is not in the registry")
+            directory = Path(registered.download())
+            models[horizon] = _build_loaded(horizon, directory, source="registry")
+        except Exception as exc:
+            print(f"Skipping registry h{horizon}: {type(exc).__name__}: {exc}")
     return models
 
 
 def load_models(local_dir: Path = DEFAULT_LOCAL_MODEL_DIR) -> dict[int, LoadedModel]:
-    """Registry first, local bundle as fallback.
+    """Registry first, local bundle filling any gaps.
 
-    Production reads the registry; the fallback keeps the dashboard usable when
-    the Hopsworks data ports are unreachable (see README troubleshooting).
+    Production reads the registry; the local fallback keeps the dashboard usable
+    when the Hopsworks data ports are unreachable (see README troubleshooting),
+    and covers individual horizons the registry could not supply.
     """
     try:
         models = load_registry_models()
-        if models:
-            return models
     except Exception as exc:
-        print(f"Model registry unavailable ({type(exc).__name__}), falling back to local models.")
-    return load_local_models(local_dir)
+        print(f"Model registry unavailable ({type(exc).__name__}: {exc}), using local models.")
+        models = {}
+
+    if len(models) < len(HORIZONS):
+        for horizon, loaded in load_local_models(local_dir).items():
+            models.setdefault(horizon, loaded)
+
+    return models
 
 
 def build_forecast(latest_row: pd.DataFrame, models: dict[int, LoadedModel]) -> list[ForecastDay]:

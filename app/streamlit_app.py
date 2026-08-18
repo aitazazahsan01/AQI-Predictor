@@ -266,10 +266,27 @@ def main():
         st.error("No feature data available. Run the backfill or the hourly pipeline first.")
         return
     if not models:
-        st.error(
-            "No trained models found. Run `python scripts/run_training_pipeline.py --save-local models`, "
-            "or make the Hopsworks Model Registry reachable."
+        # Features loaded but no model did, so show what we can rather than a
+        # bare error page: the observed history is still worth looking at.
+        st.error("No trained models available, so no forecast can be produced yet.")
+        st.markdown(
+            """
+The dashboard reads models from the **Hopsworks Model Registry**, which stays
+empty until a training run registers one.
+
+- **Deployed app:** run the *Daily Aggregation and Training* workflow in GitHub
+  Actions (Actions -> Daily Aggregation and Training -> Run workflow). It trains
+  on the feature store and registers the winning model per horizon.
+- **Locally:** `python scripts/run_training_pipeline.py --save-local models`,
+  which writes the bundle the dashboard falls back to when the registry is
+  unreachable.
+"""
         )
+        st.divider()
+        render_today(features, station)
+        st.divider()
+        render_trend(features, forecasts=[])
+        render_scale()
         return
 
     forecasts = build_forecast(features.tail(1), models)
