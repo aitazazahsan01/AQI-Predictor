@@ -44,7 +44,6 @@ Other scripts:
 | --- | --- |
 | `npm run build` | Static export into `out/` |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run lint` | Next.js lint |
 
 ## Deployment
 
