@@ -142,9 +142,9 @@ Different models win at different horizons, which is exactly why selection happe
 
 ### 🚧 Known gaps
 
-- The **LSTM** was never benchmarked locally — TensorFlow wouldn't install on the development network. The training workflow installs it, so it competes there; whether it actually wins a horizon is answered by the comparison table each run prints.
+- The **LSTM** competes in every nightly run and has never won a horizon — Ridge takes days 1 and 2, Random Forest day 3. A real result, but one produced by default hyperparameters rather than a tuned architecture.
 - **The dashboard can't serve an LSTM even if one wins.** TensorFlow is excluded from the base requirements because it has no wheels for the Python version the hosting platforms default to. Model loading degrades per horizon rather than failing outright, so that horizon falls back instead of serving the winner.
-- **Three days of live operation isn't a track record.** The backfill supplies four years of history, but forecasts have not yet been scored against genuinely unseen future days — only against a chronological hold-out.
+- **Published forecasts are never scored against the outcome.** Nightly runs since 19 August mean every past forecast now sits next to the day it predicted, but nothing compares them. All accuracy figures come from a chronological hold-out.
 - **Single city.** The schema, config and pipelines are city-agnostic; only Islamabad has been run.
 
 ---
