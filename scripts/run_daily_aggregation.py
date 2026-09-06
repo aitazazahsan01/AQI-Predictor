@@ -5,6 +5,7 @@ per city, and writes it to the `aqi_daily_features` feature group.
 
 Usage:
     python scripts/run_daily_aggregation.py                 # yesterday (UTC)
+    python scripts/run_daily_aggregation.py --catch-up 7    # repair the last week
     python scripts/run_daily_aggregation.py --date 2026-07-27
     python scripts/run_daily_aggregation.py --all           # every computable day
 
@@ -20,6 +21,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from src.features.availability import select_recent_days  # noqa: E402
 from src.features.feature_engineering import (  # noqa: E402
     MIN_HOURS_FOR_RELIABLE_DAY,
     compute_daily_features,
@@ -36,6 +38,12 @@ def parse_args():
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--date", help="UTC day to compute, as YYYY-MM-DD. Defaults to yesterday.")
     group.add_argument("--all", action="store_true", help="Write every day that can be computed.")
+    group.add_argument(
+        "--catch-up",
+        type=int,
+        metavar="DAYS",
+        help="Write every computable day in the last DAYS days, repairing missed runs.",
+    )
     return parser.parse_args()
 
 
@@ -59,6 +67,12 @@ def main():
 
     if args.all:
         to_write = daily
+    elif args.catch_up:
+        to_write = select_recent_days(daily, args.catch_up)
+        if to_write.empty:
+            print(f"No computable days in the last {args.catch_up} days.")
+            return
+        print(f"Catching up the last {args.catch_up} days: {len(to_write)} row(s) to write.")
     else:
         if args.date:
             target = pd.Timestamp(args.date, tz="UTC")

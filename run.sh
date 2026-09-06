@@ -10,6 +10,7 @@
 #   ./run.sh train             Module 4 - train from the feature store and register models
 #   ./run.sh eda               Module 9 - regenerate EDA.md from the data
 #   ./run.sh dashboard         Module 6 - serve the Streamlit dashboard locally
+#   ./run.sh backtest          score published forecasts against what happened
 #   ./run.sh export-web        Module 10 - rebuild web/public/data/forecast.json
 #   ./run.sh web               Module 10 - serve the Next.js site locally
 #
@@ -52,10 +53,11 @@ case "$command" in
   train)         exec python scripts/run_training_pipeline.py "$@" ;;
   eda)           exec python scripts/run_eda.py "$@" ;;
   dashboard)     exec streamlit run app/streamlit_app.py "$@" ;;
+  backtest)      exec python scripts/run_backtest.py "$@" ;;
   export-web)    exec python scripts/export_web_data.py "$@" ;;
   web)           cd web && exec npm run dev "$@" ;;
   *)
-    echo "Usage: ./run.sh {test|hourly|daily|backfill-dry|backfill|train-offline|train|eda|dashboard|export-web|web} [args...]" >&2
+    echo "Usage: ./run.sh {test|hourly|daily|backfill-dry|backfill|train-offline|train|eda|backtest|dashboard|export-web|web} [args...]" >&2
     exit 1
     ;;
 esac

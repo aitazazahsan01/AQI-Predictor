@@ -41,11 +41,15 @@ jobs:
         # Python version TensorFlow publishes wheels for - it lags new releases.
         run: pip install -r requirements-train.txt
 
-      - name: Aggregate yesterday into daily features
+      # A trailing window, not just yesterday. GitHub skips scheduled runs
+      # regularly, and writing only yesterday made every skipped cron a
+      # permanent hole in the training data - 8 of 53 days were lost this way
+      # before this was caught. Re-inserting an existing day is an upsert.
+      - name: Aggregate recent days into daily features
         env:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
           HOPSWORKS_PROJECT_NAME: ${{ secrets.HOPSWORKS_PROJECT_NAME }}
-        run: python scripts/run_daily_aggregation.py
+        run: python scripts/run_daily_aggregation.py --catch-up 7
 
       - name: Retrain and register models
         if: ${{ !inputs.skip_training }}

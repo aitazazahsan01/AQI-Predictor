@@ -10,7 +10,7 @@
 [![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
 [![Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![Next.js](https://img.shields.io/badge/Website-Next.js-000000?logo=nextdotjs&logoColor=white)](web/)
-[![Tests](https://img.shields.io/badge/tests-151%20passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-190%20passing-brightgreen)](tests/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Air pollution kills an estimated 7 million people a year. This project answers a simple question: _how bad will the air be where I live, three days from now?_**
@@ -50,7 +50,7 @@ Everything runs on free tiers: GitHub Actions for scheduling, Hopsworks for the 
 | 🔮 **Forecast horizon** | 3 days (separate model per horizon) |
 | 📊 **Training data** | 1,454 days · 2022-08-05 → present · 100% complete |
 | ⏱️ **Data freshness** | Hourly ingestion, daily retraining |
-| 🧪 **Test coverage** | 151 unit tests |
+| 🧪 **Test coverage** | 190 unit tests |
 
 > 📖 **New here?** [Project_Explanation.md](Project_Explanation.md) explains the whole project in plain language — what each module does and why every technology was chosen.
 > 🛠️ **Building on this?** [PROJECT_PLAN.md](PROJECT_PLAN.md) has the technical spec — schemas, API contracts, and module boundaries.
@@ -114,7 +114,7 @@ Progress  ████████████████████  100%  (9
 - Two Hopsworks feature groups, live and populated
 - Multi-model training with per-horizon selection against a persistence baseline
 - Explained forecasts (SHAP) and hazardous-air alerts
-- 151 unit tests
+- 190 unit tests
 
 ### 📊 Current model results
 
@@ -132,19 +132,20 @@ Different models win at different horizons, which is exactly why selection happe
 
 - **[REPORT.md](REPORT.md)** — full project report: design decisions, results, problems hit, and honest limitations
 - **[EDA.md](EDA.md)** — generated data analysis: seasonality, drivers, predictability
+- **[BACKTEST.md](BACKTEST.md)** — published forecasts scored against what actually happened, reconstructed from the git history of the snapshot file
 
 ### 🟢 Live status
 
 - **Feature store populated** — 35,376 hourly and 1,474 daily rows, backfilled through GitHub Actions
 - **Training verified against the feature store** (not just the API), producing the same results within noise — confirming stored and live features are computed identically
-- **CI green** — all 151 tests pass on GitHub runners
+- **CI green** — all 190 tests pass on GitHub runners
 - **Model Registry populated** — the daily training workflow ran green and registered the best model per horizon
 
 ### 🚧 Known gaps
 
 - The **LSTM** competes in every nightly run and has never won a horizon — Ridge takes days 1 and 2, Random Forest day 3. A real result, but one produced by default hyperparameters rather than a tuned architecture.
 - **The dashboard can't serve an LSTM even if one wins.** TensorFlow is excluded from the base requirements because it has no wheels for the Python version the hosting platforms default to. Model loading degrades per horizon rather than failing outright, so that horizon falls back instead of serving the winner.
-- **Published forecasts are never scored against the outcome.** Nightly runs since 19 August mean every past forecast now sits next to the day it predicted, but nothing compares them. All accuracy figures come from a chronological hold-out.
+- **The operational sample is still small.** [BACKTEST.md](BACKTEST.md) now scores published forecasts against outcomes, but on 18 resolved forecasts — a window short enough that a few unusual days move it substantially. It is a signal, not a verdict.
 - **Single city.** The schema, config and pipelines are city-agnostic; only Islamabad has been run.
 
 ---
@@ -414,7 +415,7 @@ AQI-Predictor/
 │   ├── src/styles/modernist.css   # vendored design system (read-only)
 │   └── public/data/forecast.json  # the published snapshot the site renders
 ├── scripts/                       # CLI entrypoints (what CI actually runs)
-├── tests/                         # 151 unit tests
+├── tests/                         # 190 unit tests
 ├── PROJECT_PLAN.md                # technical spec
 ├── Project_Explanation.md         # plain-language guide
 └── requirements.txt

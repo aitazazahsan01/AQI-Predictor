@@ -25,7 +25,7 @@ All nine planned modules are implemented, plus a public website built after them
 | M9 | EDA + report | Generated data analysis ([EDA.md](EDA.md)) and this document |
 | M10 | Public website | Statically exported Next.js front end, fed by a JSON snapshot the pipeline publishes |
 
-**151 unit tests** cover the feature logic, metrics, alert thresholds, inference contracts, snapshot serialisation, feature-view reads and data-quality guards.
+**190 unit tests** cover the feature logic, metrics, alert thresholds, inference contracts, snapshot serialisation, feature-view reads and data-quality guards.
 
 ---
 
@@ -237,6 +237,18 @@ Neither front end failed on its own code. Both were rejected by the platform hos
 
 **Lesson:** a hosted platform pins the runtime and the security floor; the project does not. Both problems were invisible locally, where the interpreter was older and no advisory gate existed, and both surfaced only at deploy time. The defence is the same in each case — keep the heavy or fast-moving dependency out of the path that has to run in production.
 
+### 6.7 The pipeline was quietly losing a day at a time
+
+Building the backtest surfaced a defect nothing else had: **8 of 53 recent days were missing from the feature store** — 23, 25, 27, 28, 29, 31 August and 2, 3 September.
+
+Nothing had failed loudly. `run_daily_aggregation.py` computed *yesterday* and wrote only that row, so a scheduled run that never fired left a permanent hole. GitHub skips scheduled workflow runs routinely under load, and each skip cost exactly one day, forever. Every missing feature day mapped precisely to a day the daily workflow had not run.
+
+The damage compounds. A missing day is not just one absent training row: it breaks the lag and rolling features of the days *after* it, and it removes up to three forecasts from any evaluation, because a forecast can only be scored against a day that was recorded.
+
+The aggregation now rewrites a trailing seven-day window (`--catch-up 7`) rather than a single day. The feature group is keyed on `(city, date)`, so re-inserting a day that already exists is an upsert — the repair costs nothing and a skipped run heals itself on the next one.
+
+**Lesson:** the failure was invisible precisely because the job succeeded. It did exactly what it was told, and what it was told was subtly wrong. A pipeline that writes only the newest record silently depends on never missing a run — an assumption no scheduler honours. It surfaced only because something finally tried to *use* the history rather than append to it.
+
 ---
 
 ## 7. Explainability
@@ -315,21 +327,55 @@ reader.
 
 ---
 
-## 10. Honest limitations
+## 10. Measured in operation
+
+Every accuracy figure above comes from a chronological hold-out: fit on old days, score on recent ones. That is the correct way to *select* a model. It is not the same as measuring one, because it is computed once, by the process that chose the model, on data that was already on disk.
+
+The deployed system makes a different claim every night, in public, about days that have not happened. Those claims were never checked — so I checked them.
+
+No new infrastructure was needed. Each nightly run had already committed a snapshot recording what the system predicted, and later runs recorded what the air actually did, so the git history of `web/public/data/forecast.json` is a forecast ledger. `scripts/run_backtest.py` reads every historical version out of git, joins each forecast to the day it targeted, and writes [BACKTEST.md](BACKTEST.md). A forecast is therefore scored against an observation that did not exist when it was made — there is no way to leak.
+
+The persistence baseline is reconstructed the same way, from the last AQI observed at the moment each forecast was issued: genuinely what a person could have said for free, at the time, with no model.
+
+| Horizon | n | RMSE (operational) | RMSE (hold-out) | Skill vs persistence |
+|:--:|--:|--:|--:|--:|
+| +1d | 6 | 15.02 | 9.13 | −0.1% |
+| +2d | 7 | 14.89 | 17.76 | −2.3% |
+| +3d | 5 | 14.86 | 20.76 | −16.8% |
+
+Read carefully, because the honest reading is uncomfortable and the sample is small.
+
+**Day 1 is roughly two-thirds worse in operation than on the hold-out** (15.02 vs 9.13), and dead level with persistence. On the hold-out, day 1 was the system's strongest result and beat persistence by 29%. That gap is the entire reason this measurement was worth building: the number that was quoted everywhere is the number that degraded most.
+
+Days 2 and 3 look *better* than their hold-out figures, which is not evidence of anything good — it reflects a quiet fortnight rather than improved modelling. Day 3 still lost to persistence by 17%.
+
+Every horizon shows negative bias (−3.7 to −7.7), meaning the system consistently forecast **cleaner air than arrived** across this window. A one-directional error is more interesting than a large one, because it suggests something correctable rather than irreducible noise.
+
+The caveats are load-bearing:
+
+- **n is 6, 7 and 5.** A handful of unusual days moves these numbers substantially. This is a signal that something is worth investigating, not a verdict on the models.
+- **The sample is small partly because of the bug in §6.7.** Eight missing days removed up to 24 forecasts from the scoreable set. The next run of this backtest, after the catch-up fix has been live for a week, will rest on a materially larger sample.
+- **The window is one stretch of late-summer weather**, not a range of conditions. The hold-out deliberately spans 90 days; this does not.
+
+What it establishes is the thing a hold-out cannot: whether the deployed system, fed by the live pipeline, performs as its selection process promised. On this evidence, at day 1, it does not — and that is worth knowing.
+
+---
+
+## 11. Honest limitations
 
 - **Day-3 forecasts are weak** (R² 0.14). The autocorrelation analysis shows the signal genuinely isn't there at that range; this is a property of the problem, not a fixable defect.
 - **The LSTM competes nightly and has not won a horizon.** TensorFlow could not be installed on the development network, so the LSTM was never scored locally. It is installed in the training workflow (`requirements-train.txt`) and has competed in every scheduled run since 19 August; Ridge still wins days 1 and 2, and Random Forest day 3. Sequence modelling has not recovered anything at day 3 on this dataset — a real result, but one produced by defaults rather than by a tuned architecture.
 - **The dashboard cannot serve an LSTM even if one wins.** TensorFlow is excluded from the base requirements because it has no wheels for the Python version the hosting platforms default to. The loaders degrade per horizon rather than failing outright, but that horizon would fall back rather than serve the winner.
 - **Single city.** The schema, config and pipelines are city-agnostic (adding one is a four-line config change), but only Islamabad has been run.
-- **Forecasts have never been scored against what actually happened.** The pipeline has run nightly since 19 August and the feature store now holds 1,485 days, so every forecast it published is now sitting next to the day it predicted. Nothing compares the two. Every accuracy figure in this report comes from a chronological hold-out, which is the right way to *select* a model and not the same thing as measuring one in operation.
+- **The operational sample is small, and it disagrees with the hold-out.** Section 10 scores 18 resolved forecasts and finds day-1 RMSE of 15.02 against the hold-out's 9.13. Whether that is a real degradation or a short unlucky window cannot be settled at this sample size, and the honest position is that it is unresolved rather than explained.
 - **No hyperparameter tuning.** Models use sensible defaults. Given day 1 is already near the noise floor and day 3 is signal-limited, tuning would likely yield marginal gains — but this is an assumption, not a measured result.
 - **Backfilled "observations" are themselves reanalysis output**, not physical sensor readings. Open-Meteo's archive is model-based, so the ground truth is itself an estimate.
 
 ---
 
-## 11. What I would do next
+## 12. What I would do next
 
-1. Accumulate live forecasts and score them against what actually happened, which is the only measurement that reflects operating conditions rather than a hold-out split.
+1. Re-run the backtest once the catch-up fix has been live for a few weeks, on a sample large enough to say whether the day-1 gap in section 10 is real.
 2. Read off whether the LSTM, now competing in the scheduled runs, recovers anything at day 3 - and drop it from the candidate set if it does not, since it costs the most to train by a wide margin.
 3. Predict *categories* rather than values at longer horizons — "will tomorrow be unhealthy?" is both more useful and more tractable than an exact number when R² is 0.14.
 4. Add a second city to prove the multi-city path.
@@ -337,7 +383,7 @@ reader.
 
 ---
 
-## 12. Conclusion
+## 13. Conclusion
 
 The system meets its objective: an automated, serverless pipeline that ingests data hourly, retrains daily, and serves explained 3-day AQI forecasts with health alerts. Every module is implemented and tested.
 

@@ -21,6 +21,12 @@ MIN_USABLE_ROWS = 14
 # Beyond this, the newest stored row is too old to present as "latest".
 MAX_STALENESS_DAYS = 3
 
+# How far back the daily aggregation re-writes on each run. A scheduled job that
+# only ever writes yesterday loses a day permanently every time its cron is
+# skipped, and GitHub Actions skips scheduled runs regularly. Rewriting a
+# trailing window instead means a missed run heals itself on the next one.
+CATCH_UP_DAYS = 7
+
 
 def describe_usability(
     frame: pd.DataFrame,
@@ -52,3 +58,30 @@ def describe_usability(
 
 def is_usable(frame: pd.DataFrame, **kwargs) -> bool:
     return describe_usability(frame, **kwargs)[0]
+
+
+def select_recent_days(
+    frame: pd.DataFrame,
+    days: int = CATCH_UP_DAYS,
+    today: dt.date | None = None,
+) -> pd.DataFrame:
+    """Rows from the last `days` complete days, newest window first.
+
+    Used by the daily aggregation to rewrite a trailing window rather than a
+    single day. Re-inserting a day that already exists is an upsert on
+    (city, date), so overlap is harmless - and it is what lets a skipped
+    scheduled run be repaired by the next one instead of leaving a permanent
+    hole in the training data.
+
+    The window ends yesterday: today is still in progress, and Open-Meteo fills
+    the remaining hours of the current day with forecast values.
+    """
+    if frame is None or frame.empty:
+        return frame
+
+    reference = today or dt.date.today()
+    end = reference - dt.timedelta(days=1)
+    start = end - dt.timedelta(days=days - 1)
+
+    dates = pd.to_datetime(frame["date"], utc=True).dt.date
+    return frame[(dates >= start) & (dates <= end)]
