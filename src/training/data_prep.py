@@ -93,11 +93,9 @@ def load_training_frame(city: str | None = None) -> pd.DataFrame:
     attaches forecast targets. Imported lazily so the pure functions above stay
     testable without credentials or a network."""
     from src.hopsworks_utils.connection import get_feature_store
-    from src.hopsworks_utils.feature_groups import get_or_create_daily_features_fg
+    from src.hopsworks_utils.feature_views import read_daily_features
 
-    fs = get_feature_store()
-    fg = get_or_create_daily_features_fg(fs)
-    daily = fg.read()
+    daily = read_daily_features(get_feature_store())
 
     if city is not None:
         daily = daily[daily["city"] == city]

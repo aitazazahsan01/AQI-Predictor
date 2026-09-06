@@ -10,7 +10,7 @@
 
 An end-to-end, serverless machine learning system that forecasts Islamabad's Air Quality Index three days ahead. It collects data hourly, engineers features daily, retrains itself daily, and serves forecasts with explanations and health alerts through a web dashboard — with no server to administer anywhere in the stack.
 
-All nine planned modules are implemented:
+All nine planned modules are implemented, plus a public website built after them:
 
 | # | Module | What it does |
 |:--:|---|---|
@@ -23,8 +23,9 @@ All nine planned modules are implemented:
 | M7 | Explainability | SHAP attribution per forecast |
 | M8 | Alerts | EPA-scale categorisation with hazardous-air warnings |
 | M9 | EDA + report | Generated data analysis ([EDA.md](EDA.md)) and this document |
+| M10 | Public website | Statically exported Next.js front end, fed by a JSON snapshot the pipeline publishes |
 
-**115 unit tests** cover the feature logic, metrics, alert thresholds, inference contracts and data-quality guards.
+**151 unit tests** cover the feature logic, metrics, alert thresholds, inference contracts, snapshot serialisation, feature-view reads and data-quality guards.
 
 ---
 
@@ -41,14 +42,23 @@ AQICN (station reading, display only)    ─┴─►  M1 hourly ingestion
                                                       │
                                                       ▼
                                         Hopsworks: aqi_daily_features
+                                                      │
+                                        aqi_daily_features_view
                                               │              │
                           M4 training ────────┘              └──── M6 dashboard
                                 │                                        ▲
                                 ▼                                        │
-                     Hopsworks Model Registry ───────────────────────────┘
+                     Hopsworks Model Registry ───────────────────────────┤
+                                │                                        │
+                                └──► M10 snapshot export ──► forecast.json
+                                                                  │
+                                                                  ▼
+                                                          Next.js website
 ```
 
-GitHub Actions drives ingestion hourly and aggregation-then-training daily. The dashboard is a read-only consumer.
+GitHub Actions drives ingestion hourly and aggregation-then-training daily. Both front ends are read-only consumers: the dashboard reads the feature store and registry live, the website reads a JSON snapshot the pipeline publishes for it.
+
+Training and inference read through a **Feature View** (`aqi_daily_features_view`) rather than the feature group directly, so which columns constitute "the training data" is declared once on the read side instead of re-decided by each consumer.
 
 ### Key design decision: pure feature functions
 
@@ -217,6 +227,16 @@ The dashboard initially read whatever the feature store held, which was a single
 - **`hopsworks` cannot pip-install on native Windows** (`pyjks` → `twofish` needs a C compiler, no prebuilt wheel). Resolved by developing inside WSL, which also matches the Linux CI runners.
 - **The development network permits only port 443.** Hopsworks *reads* work (REST over 443), but *writes* need HopsFS (8020) and Kafka (9092), both blocked. Diagnosed by testing raw TCP against an unrelated host to prove it was the network rather than Hopsworks, and confirmed identically from Windows to rule out a WSL quirk. The pipelines are designed to run on GitHub Actions, which has unrestricted egress, so this is an environment limitation rather than a system defect.
 
+### 6.6 Two hosting platforms, two runtime refusals
+
+Neither front end failed on its own code. Both were rejected by the platform hosting it, for reasons unrelated to whether the application worked.
+
+**Streamlit Cloud** defaults to a very recent Python (3.14 at the time). TensorFlow publishes no wheels for it, so dependency resolution failed outright and nothing installed. TensorFlow is only needed to *train* the LSTM, never to serve a forecast, so the fix was to split the dependency file in two: `requirements.txt` for the pipelines, dashboard and tests, and `requirements-train.txt` adding TensorFlow for the training job alone. The LSTM is skipped automatically wherever TensorFlow is absent, so training still works under the base requirements — it just compares five candidates instead of six.
+
+**Vercel** compiled and exported the site successfully, then refused to publish it: the pinned Next.js version carried a published CVE. Upgrading within the same major line was not enough — the advisory covered the entire 15.x range and named a major upgrade as the only remedy, with two transitive advisories in `postcss` and `sharp` resolving the same way. Moving to Next 16 cleared all three.
+
+**Lesson:** a hosted platform pins the runtime and the security floor; the project does not. Both problems were invisible locally, where the interpreter was older and no advisory gate existed, and both surfaced only at deploy time. The defence is the same in each case — keep the heavy or fast-moving dependency out of the path that has to run in production.
+
 ---
 
 ## 7. Explainability
@@ -247,28 +267,77 @@ An alert fires if **any** of the next three days crosses the threshold — advan
 
 ---
 
-## 9. Honest limitations
+## 9. The public website
+
+The Streamlit dashboard is a live consumer: it boots a Python process, holds
+Hopsworks credentials, loads models and runs SHAP on request. That is the right
+shape for an internal tool and the wrong shape for a public one.
+
+So the website inverts it. The pipeline publishes a single JSON snapshot; the
+site is a static Next.js export that draws it and nothing else.
+
+```
+GitHub Actions (holds the secrets)        The website (holds none)
+Hopsworks -> models -> SHAP
+         └-> forecast.json  ------------> renders forecast.json
+```
+
+Three properties follow, and each was the reason for the choice:
+
+- **The trust boundary does not move.** Credentials stay inside GitHub Actions,
+  where they already were. There is no browser-side key, no proxy, no API to
+  secure.
+- **Skew remains impossible.** The published numbers come from the same
+  `load_models` -> `build_forecast` -> `explain_prediction` path the dashboard
+  uses. A TypeScript reimplementation of feature loading or SHAP would have
+  reintroduced exactly the divergence section 2 exists to prevent - and neither
+  the Hopsworks client nor SHAP exists in JavaScript anyway.
+- **Hosting is a folder of HTML.** Deployed on Vercel, which redeploys from the
+  push webhook that the nightly snapshot commit already produces. No deploy
+  hook, no scheduled build, no runtime.
+
+The cost is that the site is only as fresh as its last build. For a forecast
+that regenerates once a night, that is not a cost.
+
+Two guards protect it. `export_web_data.py` refuses to publish an empty feature
+frame or a model-less snapshot, so a bad run leaves the previous good snapshot
+serving rather than replacing it with nothing. And the front end fails its
+build on a `schema_version` mismatch rather than shipping a page that silently
+renders half its panels.
+
+The interface is built on **Modernist**, a design system whose constraints
+happened to suit the content: flat, ruled, flush-left, with the accent colour
+permitted to run as a full field exactly once per page. That one place is the
+health alert - the loudest element on the page is loud because the content is.
+The EPA category colours are the deliberate exception to the palette: they are
+a published standard, and recolouring them to match a brand would misinform the
+reader.
+
+---
+
+## 10. Honest limitations
 
 - **Day-3 forecasts are weak** (R² 0.14). The autocorrelation analysis shows the signal genuinely isn't there at that range; this is a property of the problem, not a fixable defect.
-- **The LSTM has not been benchmarked.** It is implemented and integrated, but TensorFlow could not be installed on the development network. It runs automatically wherever TensorFlow is present. Its absence means the "deep learning" arm of the comparison is untested.
-- **The Model Registry step has not executed end-to-end**, for the port-blocking reason above. Local model persistence is implemented and verified as a working substitute.
+- **The LSTM benchmark is only as old as the last training run.** TensorFlow could not be installed on the development network, so the LSTM was never scored locally; it is now installed in the training workflow (`requirements-train.txt`) and competes automatically there. Whether sequence modelling actually recovers anything at day 3 is answered by the comparison table each nightly run prints, not by this document.
+- **The dashboard cannot serve an LSTM even if one wins.** TensorFlow is excluded from the base requirements because it has no wheels for the Python version the hosting platforms default to. The loaders degrade per horizon rather than failing outright, but that horizon would fall back rather than serve the winner.
 - **Single city.** The schema, config and pipelines are city-agnostic (adding one is a four-line config change), but only Islamabad has been run.
+- **Three days of live operation is not a track record.** The backfill supplies four years of history, but the scheduled hourly and daily runs have been live only briefly. Forecast accuracy against genuinely unseen future days - as opposed to a chronological hold-out - remains unmeasured.
 - **No hyperparameter tuning.** Models use sensible defaults. Given day 1 is already near the noise floor and day 3 is signal-limited, tuning would likely yield marginal gains — but this is an assumption, not a measured result.
 - **Backfilled "observations" are themselves reanalysis output**, not physical sensor readings. Open-Meteo's archive is model-based, so the ground truth is itself an estimate.
 
 ---
 
-## 10. What I would do next
+## 11. What I would do next
 
-1. Run the pipelines on GitHub Actions to populate the feature store and exercise the registry path end-to-end.
-2. Benchmark the LSTM where TensorFlow installs, and check whether sequence modelling recovers anything at day 3.
+1. Accumulate live forecasts and score them against what actually happened, which is the only measurement that reflects operating conditions rather than a hold-out split.
+2. Read off whether the LSTM, now competing in the scheduled runs, recovers anything at day 3 - and drop it from the candidate set if it does not, since it costs the most to train by a wide margin.
 3. Predict *categories* rather than values at longer horizons — "will tomorrow be unhealthy?" is both more useful and more tractable than an exact number when R² is 0.14.
 4. Add a second city to prove the multi-city path.
 5. Add prediction intervals. A day-3 forecast of 120 ± 40 is more honest, and more useful, than a bare 120.
 
 ---
 
-## 11. Conclusion
+## 12. Conclusion
 
 The system meets its objective: an automated, serverless pipeline that ingests data hourly, retrains daily, and serves explained 3-day AQI forecasts with health alerts. Every module is implemented and tested.
 
