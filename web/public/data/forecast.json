@@ -1,61 +1,61 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-09-06T04:49:54+00:00",
+  "generated_at": "2026-09-07T04:55:49+00:00",
   "city": {
     "slug": "islamabad",
     "name": "Islamabad, Pakistan",
     "latitude": 33.6844,
     "longitude": 73.0479
   },
-  "feature_source": "Hopsworks feature store (1,485 rows, current to 2026-09-05)",
-  "observed_days": 1485,
+  "feature_source": "Hopsworks feature store (1,489 rows, current to 2026-09-06)",
+  "observed_days": 1489,
   "latest": {
-    "date": "2026-09-05",
-    "aqi": 148.57,
-    "aqi_max": 169.0,
-    "aqi_min": 140.0,
+    "date": "2026-09-06",
+    "aqi": 135.43,
+    "aqi_max": 165.0,
+    "aqi_min": 115.0,
     "category": "Unhealthy for Sensitive Groups",
     "color": "#FF7E00",
     "advice": "People with heart or lung disease, older adults and children should limit prolonged outdoor exertion.",
     "conditions": [
       {
         "label": "PM2.5",
-        "value": 57.84,
+        "value": 50.24,
         "unit": "ug/m3"
       },
       {
         "label": "PM10",
-        "value": 75.06,
+        "value": 63.97,
         "unit": "ug/m3"
       },
       {
         "label": "Ozone",
-        "value": 70.29,
+        "value": 83.71,
         "unit": "ug/m3"
       },
       {
         "label": "Nitrogen dioxide",
-        "value": 61.31,
+        "value": 44.86,
         "unit": "ug/m3"
       },
       {
         "label": "Temperature",
-        "value": 25.69,
+        "value": 25.2,
         "unit": "C"
       },
       {
         "label": "Humidity",
-        "value": 75.43,
+        "value": 77.43,
         "unit": "%"
       },
       {
         "label": "Wind speed",
-        "value": 6.63,
+        "value": 4.9,
         "unit": "km/h"
       },
       {
         "label": "Rainfall",
-        "value": 0.4,
+        "value": 1.1,
         "unit": "mm"
       }
     ]
@@ -64,24 +64,24 @@
   "forecast": [
     {
       "horizon": 1,
-      "date": "2026-09-06",
-      "aqi": 142.9,
+      "date": "2026-09-07",
+      "aqi": 131.1,
       "category": "Unhealthy for Sensitive Groups",
       "color": "#FF7E00",
       "model_type": "ridge"
     },
     {
       "horizon": 2,
-      "date": "2026-09-07",
-      "aqi": 132.3,
+      "date": "2026-09-08",
+      "aqi": 126.1,
       "category": "Unhealthy for Sensitive Groups",
       "color": "#FF7E00",
       "model_type": "ridge"
     },
     {
       "horizon": 3,
-      "date": "2026-09-08",
-      "aqi": 128.2,
+      "date": "2026-09-09",
+      "aqi": 120.6,
       "category": "Unhealthy for Sensitive Groups",
       "color": "#FF7E00",
       "model_type": "random_forest"
@@ -89,22 +89,6 @@
   ],
   "alert": null,
   "history": [
-    {
-      "date": "2026-07-15",
-      "aqi": 128.79
-    },
-    {
-      "date": "2026-07-16",
-      "aqi": 135.38
-    },
-    {
-      "date": "2026-07-17",
-      "aqi": 140.79
-    },
-    {
-      "date": "2026-07-18",
-      "aqi": 142.71
-    },
     {
       "date": "2026-07-19",
       "aqi": 113.25
@@ -258,8 +242,20 @@
       "aqi": 126.0
     },
     {
+      "date": "2026-08-31",
+      "aqi": 93.0
+    },
+    {
       "date": "2026-09-01",
       "aqi": 113.33
+    },
+    {
+      "date": "2026-09-02",
+      "aqi": 107.2
+    },
+    {
+      "date": "2026-09-03",
+      "aqi": 134.5
     },
     {
       "date": "2026-09-04",
@@ -268,6 +264,10 @@
     {
       "date": "2026-09-05",
       "aqi": 148.57
+    },
+    {
+      "date": "2026-09-06",
+      "aqi": 135.43
     }
   ],
   "drivers": [
@@ -279,50 +279,50 @@
         {
           "feature": "pm2_5_mean",
           "label": "PM2.5",
-          "value": 57.84,
-          "contribution": 35.97
+          "value": 50.24,
+          "contribution": 23.83
         },
         {
           "feature": "aqi_max",
           "label": "Today's peak AQI",
-          "value": 169.0,
-          "contribution": 4.77
+          "value": 165.0,
+          "contribution": 4.33
         },
         {
           "feature": "aqi_mean",
           "label": "Today's average AQI",
-          "value": 148.57,
-          "contribution": -4.75
-        },
-        {
-          "feature": "aqi_min",
-          "label": "Today's lowest AQI",
-          "value": 140.0,
-          "contribution": -3.12
-        },
-        {
-          "feature": "no2_mean",
-          "label": "Nitrogen dioxide",
-          "value": 61.31,
-          "contribution": 2.35
-        },
-        {
-          "feature": "humidity_mean",
-          "label": "Humidity",
-          "value": 75.43,
-          "contribution": -1.88
-        },
-        {
-          "feature": "aqi_roll7_mean",
-          "label": "7-day average AQI",
-          "value": 122.92,
-          "contribution": 1.83
+          "value": 135.43,
+          "contribution": -3.18
         },
         {
           "feature": "aqi_lag1",
           "label": "AQI yesterday",
+          "value": 148.57,
+          "contribution": -2.36
+        },
+        {
+          "feature": "aqi_lag2",
+          "label": "AQI 2 days ago",
           "value": 137.83,
-          "contribution": -1.72
+          "contribution": 2.04
+        },
+        {
+          "feature": "humidity_mean",
+          "label": "Humidity",
+          "value": 77.43,
+          "contribution": -1.86
+        },
+        {
+          "feature": "aqi_roll7_mean",
+          "label": "7-day average AQI",
+          "value": 124.27,
+          "contribution": 1.85
+        },
+        {
+          "feature": "aqi_min",
+          "label": "Today's lowest AQI",
+          "value": 115.0,
+          "contribution": -1.42
         }
       ]
     },
@@ -334,50 +334,50 @@
         {
           "feature": "pm2_5_mean",
           "label": "PM2.5",
-          "value": 57.84,
-          "contribution": 19.45
-        },
-        {
-          "feature": "no2_mean",
-          "label": "Nitrogen dioxide",
-          "value": 61.31,
-          "contribution": 4.76
-        },
-        {
-          "feature": "aqi_mean",
-          "label": "Today's average AQI",
-          "value": 148.57,
-          "contribution": -4.64
+          "value": 50.24,
+          "contribution": 12.89
         },
         {
           "feature": "aqi_roll7_mean",
           "label": "7-day average AQI",
-          "value": 122.92,
-          "contribution": 4.1
+          "value": 124.27,
+          "contribution": 4.16
         },
         {
-          "feature": "o3_mean",
-          "label": "Ozone",
-          "value": 70.29,
-          "contribution": -4.05
-        },
-        {
-          "feature": "aqi_max",
-          "label": "Today's peak AQI",
-          "value": 169.0,
-          "contribution": 2.7
-        },
-        {
-          "feature": "aqi_lag7",
-          "label": "AQI a week ago",
-          "value": 143.75,
-          "contribution": 2.22
+          "feature": "aqi_mean",
+          "label": "Today's average AQI",
+          "value": 135.43,
+          "contribution": -3.1
         },
         {
           "feature": "aqi_lag1",
           "label": "AQI yesterday",
+          "value": 148.57,
+          "contribution": 3.01
+        },
+        {
+          "feature": "aqi_max",
+          "label": "Today's peak AQI",
+          "value": 165.0,
+          "contribution": 2.45
+        },
+        {
+          "feature": "humidity_mean",
+          "label": "Humidity",
+          "value": 77.43,
+          "contribution": -2.1
+        },
+        {
+          "feature": "no2_mean",
+          "label": "Nitrogen dioxide",
+          "value": 44.86,
+          "contribution": 1.96
+        },
+        {
+          "feature": "aqi_lag2",
+          "label": "AQI 2 days ago",
           "value": 137.83,
-          "contribution": 2.19
+          "contribution": 1.9
         }
       ]
     },
@@ -387,52 +387,52 @@
       "unavailable": null,
       "features": [
         {
-          "feature": "no2_mean",
-          "label": "Nitrogen dioxide",
-          "value": 61.31,
-          "contribution": 5.88
-        },
-        {
           "feature": "aqi_roll7_mean",
           "label": "7-day average AQI",
-          "value": 122.92,
-          "contribution": 4.61
+          "value": 124.27,
+          "contribution": 4.58
         },
         {
           "feature": "aqi_mean",
           "label": "Today's average AQI",
-          "value": 148.57,
-          "contribution": 4.2
-        },
-        {
-          "feature": "pm2_5_mean",
-          "label": "PM2.5",
-          "value": 57.84,
-          "contribution": 3.32
+          "value": 135.43,
+          "contribution": 4.55
         },
         {
           "feature": "aqi_roll3_mean",
           "label": "3-day average AQI",
-          "value": 140.3,
-          "contribution": 3.31
+          "value": 140.61,
+          "contribution": 2.14
+        },
+        {
+          "feature": "no2_mean",
+          "label": "Nitrogen dioxide",
+          "value": 44.86,
+          "contribution": -2.11
+        },
+        {
+          "feature": "pm2_5_mean",
+          "label": "PM2.5",
+          "value": 50.24,
+          "contribution": -1.91
         },
         {
           "feature": "temp_mean",
           "label": "Temperature",
-          "value": 25.69,
-          "contribution": -3.16
-        },
-        {
-          "feature": "co_mean",
-          "label": "Carbon monoxide",
-          "value": 1121.57,
-          "contribution": -1.46
+          "value": 25.2,
+          "contribution": -1.85
         },
         {
           "feature": "aqi_lag7",
           "label": "AQI a week ago",
-          "value": 143.75,
-          "contribution": 1.39
+          "value": 126.0,
+          "contribution": 1.07
+        },
+        {
+          "feature": "wind_speed_mean",
+          "label": "Wind speed",
+          "value": 4.9,
+          "contribution": 1.01
         }
       ]
     }
